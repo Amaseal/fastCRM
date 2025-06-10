@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -10,23 +11,24 @@
 	import ChevronsRight from '@lucide/svelte/icons/chevrons-right';
 	import { debounce } from '$lib/utils';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { formatDate } from '$lib/utils';
+	import type { Material } from '$lib/server/db/schema.js';
+	import { type MaterialSchema } from './schema';
+	import { type SuperValidated, type Infer } from 'sveltekit-superforms';
+	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
-	import { type ClientSchema } from './schema';
-	import { type SuperValidated, type Infer } from 'sveltekit-superforms';
-	import type { Client } from '$lib/server/db/schema.js';
-	import { page } from '$app/state';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Separator } from '$lib/components/ui/separator';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	let {
 		data,
 		children
 	}: {
 		data: {
-			form: SuperValidated<Infer<ClientSchema>>;
-			clients: Client[];
+			form: SuperValidated<Infer<MaterialSchema>>;
+			materials: Material[];
 			pagination: {
 				page: number;
 				pageSize: number;
@@ -44,7 +46,7 @@
 	let currentPage = $state(data.pagination.page);
 	let pageSize = $state(data.pagination.pageSize);
 	let pageSizeOptions = [5, 10, 25, 50, 100];
-	let sortColumn = $state(data.pagination.sortColumn as keyof Client | null);
+	let sortColumn = $state(data.pagination.sortColumn as keyof Material | null);
 	let sortDirection = $state(data.pagination.sortDirection as 'asc' | 'desc');
 	let searchTerm = $state(data.pagination.search);
 
@@ -52,10 +54,16 @@
 	$effect(() => {
 		currentPage = data.pagination.page;
 		pageSize = data.pagination.pageSize;
-		sortColumn = data.pagination.sortColumn as keyof Client | null;
+		sortColumn = data.pagination.sortColumn as keyof Material | null;
 		sortDirection = data.pagination.sortDirection as 'asc' | 'desc';
 		searchTerm = data.pagination.search;
 	});
+
+	// Edit modal state
+	let editModalOpen = $state(false);
+	let currentItem: Material | null = $state(null);
+	let editedItem: Partial<Material> = $state({});
+	let imageModalOpen = $state(false);
 
 	// Set up debounced search
 	const handleSearchInput = (event: Event) => {
@@ -69,7 +77,6 @@
 	}, 300);
 
 	// For pagination display
-	// Create a derived getter function for page numbers
 	function getVisiblePageNumbers() {
 		const { totalPages } = data.pagination;
 		const pages: number[] = [];
@@ -141,9 +148,17 @@
 	}
 
 	// Handle sorting
-	function handleSort(column: keyof Client) {
+	function handleSort(column: keyof Material) {
 		// Check if the column is sortable
-		const sortableColumns: (keyof Client)[] = ['name', 'type', 'totalOrdered'];
+		const sortableColumns: (keyof Material)[] = [
+			'title',
+			'article',
+			'manufacturer',
+			'gsm',
+			'width',
+			'remaining',
+			'updated_at'
+		];
 		if (!sortableColumns.includes(column)) return;
 
 		const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -152,6 +167,18 @@
 			sortColumn: column,
 			sortDirection: newDirection
 		});
+	}
+	// Edit functions
+	function openEditModal(item: Material) {
+		currentItem = item;
+		// Create a deep copy of the item to avoid reference issues
+		editedItem = JSON.parse(JSON.stringify(item));
+		editModalOpen = true;
+	}
+
+	function openImageModal(item: Material) {
+		currentItem = item;
+		imageModalOpen = true;
 	}
 
 	// Pagination functions
@@ -186,29 +213,30 @@
 	<div class="flex w-full items-center gap-1 lg:gap-2">
 		<Sidebar.Trigger class="-ml-1" />
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-		<h1 class="text-base font-medium">Klienti</h1>
+		<h1 class="text-base font-medium">Audumi</h1>
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
 		<Input
 			type="text"
 			class="w-full max-w-sm"
-			placeholder="Meklēt klientus..."
+			placeholder="Meklēt audumus..."
 			value={searchTerm}
 			oninput={handleSearchInput}
 		/>
-		<Button href="/klienti/pievienot" variant="outline" class="ml-auto flex items-center gap-2"
+		<Button href="/audumi/pievienot" variant="outline" class="ml-auto flex items-center gap-2"
 			><Plus />Pievienot</Button
 		>
 	</div>
 </header>
+
 <div class="mb-4 space-y-4">
 	<div class="rounded-md border">
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					<Table.Head class="w-[150px] cursor-pointer" onclick={() => handleSort('name')}>
+					<Table.Head class="w-[150px] cursor-pointer" onclick={() => handleSort('title')}>
 						<div class="flex items-center gap-1">
-							Vārds
-							{#if sortColumn === 'name'}
+							Nosaukums
+							{#if sortColumn === 'title'}
 								{#if sortDirection === 'asc'}
 									<ChevronUp size="14" />
 								{:else}
@@ -219,16 +247,27 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head>Telefons</Table.Head>
-					<Table.Head>E-pasts</Table.Head>
-					<Table.Head>Apraksts</Table.Head>
+					<Table.Head class="cursor-pointer" onclick={() => handleSort('article')}>
+						<div class="flex items-center gap-1">
+							Artikuls
+							{#if sortColumn === 'article'}
+								{#if sortDirection === 'asc'}
+									<ChevronUp size="14" />
+								{:else}
+									<ChevronDown size="14" />
+								{/if}
+							{:else}
+								<ChevronDown size="14" />
+							{/if}
+						</div>
+					</Table.Head>
 					<Table.Head
 						class="hidden cursor-pointer md:table-cell"
-						onclick={() => handleSort('type')}
+						onclick={() => handleSort('manufacturer')}
 					>
 						<div class="flex items-center gap-1">
-							Tips
-							{#if sortColumn === 'type'}
+							Ražotājs
+							{#if sortColumn === 'manufacturer'}
 								{#if sortDirection === 'asc'}
 									<ChevronUp size="14" />
 								{:else}
@@ -239,10 +278,10 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head class="cursor-pointer" onclick={() => handleSort('totalOrdered')}>
+					<Table.Head class="hidden cursor-pointer md:table-cell" onclick={() => handleSort('gsm')}>
 						<div class="flex items-center gap-1">
-							Kopā pasūtīts
-							{#if sortColumn === 'totalOrdered'}
+							GSM
+							{#if sortColumn === 'gsm'}
 								{#if sortDirection === 'asc'}
 									<ChevronUp size="14" />
 								{:else}
@@ -253,31 +292,97 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head class="w-12 text-center">Rediģēt</Table.Head>
-					<Table.Head class="w-12 text-center">Izdzēst</Table.Head>
+					<Table.Head class="cursor-pointer" onclick={() => handleSort('width')}>
+						<div class="flex items-center gap-1">
+							Platums
+							{#if sortColumn === 'width'}
+								{#if sortDirection === 'asc'}
+									<ChevronUp size="14" />
+								{:else}
+									<ChevronDown size="14" />
+								{/if}
+							{:else}
+								<ChevronDown size="14" />
+							{/if}
+						</div>
+					</Table.Head>
+					<Table.Head class="cursor-pointer" onclick={() => handleSort('remaining')}>
+						<div class="flex items-center gap-1">
+							Atlicis
+							{#if sortColumn === 'remaining'}
+								{#if sortDirection === 'asc'}
+									<ChevronUp size="14" />
+								{:else}
+									<ChevronDown size="14" />
+								{/if}
+							{:else}
+								<ChevronDown size="14" />
+							{/if}
+						</div>
+					</Table.Head>
+
+					<Table.Head
+						class="hidden cursor-pointer md:table-cell"
+						onclick={() => handleSort('updated_at')}
+					>
+						<div class="flex items-center gap-1">
+							Labots:
+							{#if sortColumn === 'updated_at'}
+								{#if sortDirection === 'asc'}
+									<ChevronUp size="14" />
+								{:else}
+									<ChevronDown size="14" />
+								{/if}
+							{:else}
+								<ChevronDown size="14" />
+							{/if}
+						</div>
+					</Table.Head>
+					<Table.Head class="hidden cursor-pointer md:table-cell">Bilde</Table.Head>
+					<Table.Head class="w-16 text-center">Rediģēt</Table.Head>
+					<Table.Head class="w-16 text-center">Izdzēst</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#if data.clients.length === 0}
+				{#if data.materials.length === 0}
 					<Table.Row>
-						<Table.Cell colspan={8} class="py-6 text-center"
-							>Neviens klients nav atrasts!</Table.Cell
+						<Table.Cell colspan={10} class="py-6 text-center"
+							>Neviens materials nav atrasts!</Table.Cell
 						>
 					</Table.Row>
 				{:else}
-					{#each data.clients as item (item.id)}
-						<Table.Row class="hover:bg-muted/50 cursor-pointer">
-							<Table.Cell class="font-medium">{item.name || '-'}</Table.Cell>
-							<Table.Cell>{item.phone || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.email || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.description || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.type || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.totalOrdered || '-'} €</Table.Cell>
-							<Table.Cell class="text-center">
-								<Button href="/klienti/labot/{item.id}" variant="outline"><Pencil /></Button>
+					{#each data.materials as item (item.id)}
+						<Table.Row class="hover:bg-muted/50 cursor-pointer" onclick={() => openEditModal(item)}>
+							<Table.Cell class="font-medium">{item.title || '-'}</Table.Cell>
+							<Table.Cell>{item.article || '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell">{item.manufacturer || '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell"
+								>{item.gsm !== undefined ? `${item.gsm} g/m²` : '-'}</Table.Cell
+							>
+							<Table.Cell>{item.width !== undefined ? `${item.width} mm` : '-'}</Table.Cell>
+							<Table.Cell>{item.remaining !== undefined ? `${item.remaining} m` : '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell"
+								>{formatDate(item.updated_at || item.created_at)}</Table.Cell
+							>
+							<Table.Cell class="hidden md:table-cell">
+								<button
+									onclick={(e) => {
+										e.stopPropagation();
+										openImageModal(item);
+									}}
+								>
+									{#if item.image}
+										<img class="h-9 w-9 rounded-full" src={item.image} alt="auduma piemers" />
+									{:else}
+										-
+									{/if}
+								</button>
 							</Table.Cell>
 							<Table.Cell class="text-center">
-								<Button href="/klienti/izdzest/{item.id}" variant="destructive"><Trash2 /></Button>
+								<Button href="/audumi/labot/{item.id}" variant="outline"><Pencil /></Button>
+							</Table.Cell>
+							<Table.Cell class="text-center">
+								<Button href="/audumi/izdzest/{item.id}" variant="destructive"><Trash2 /></Button>
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -372,3 +477,21 @@
 		</div>
 	</div>
 </div>
+
+<!-- Image modal -->
+<Dialog.Root bind:open={imageModalOpen}>
+	<Dialog.Content class="max-h-[90vh] max-w-[50vw]">
+		<Dialog.Header>
+			<Dialog.Title>{currentItem?.image}</Dialog.Title>
+		</Dialog.Header>
+		{#if currentItem?.image}
+			<img
+				class="h-[80vh] w-[90vw] rounded-xl object-contain"
+				src={currentItem.image}
+				alt="decorative"
+			/>
+		{:else}
+			<div class="p-4 text-center">No image available</div>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

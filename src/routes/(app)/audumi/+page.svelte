@@ -1,3 +1,3 @@
 <svelte:head>
-	<title>Klienti</title>
+	<title>Audumi</title>
 </svelte:head>
