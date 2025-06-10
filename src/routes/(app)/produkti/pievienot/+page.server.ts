@@ -21,17 +21,7 @@ export const actions = {
         if (!form.valid) {
             return fail(400, { form });
         }
-        function convertToCents(price: number) {
-            try {
-                if (isNaN(price)) {
-                    return fail(400, { form });
-                }
-                return Math.floor(price * 100);
-            } catch (error) {
-                return fail(400, { form });
-            }
-        }
-        form.data.cost = Number(convertToCents(form.data.cost));
+
         try {
             await db.insert(product).values({
                 title: form.data.title,

@@ -4,15 +4,16 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { productSchema, type ProductSchema } from '../schema';
+	import { productSchema, type ProductSchema } from '../../schema';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import X from '@lucide/svelte/icons/x';
 	import MoneyInput from '$lib/components/ui/input/money-input.svelte';
+	import type { Product } from '$lib/server/db/schema';
 
-	let { data }: { data: { form: SuperValidated<Infer<ProductSchema>> } } = $props();
+	let { data }: { data: { form: SuperValidated<Infer<ProductSchema>>; item: Product } } = $props();
 
-	const form = superForm(data.form, {
+	const form = superForm(data.item, {
 		validators: zodClient(productSchema)
 	});
 
@@ -35,7 +36,7 @@
 					><X /></a
 				>
 
-				<h2 class=" text-lg font-semibold">Pievienot jaunu produktu</h2>
+				<h2 class=" text-lg font-semibold">Labot {data.item.title}</h2>
 			</Card.Header>
 			<Card.Content class="p-6 pb-2">
 				<form method="POST" use:enhance>
