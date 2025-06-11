@@ -188,7 +188,7 @@
 								<Form.Label>Bilde</Form.Label>
 								<!-- Drop Zone -->
 								<div
-									class="bg-input input flex h-[100px] cursor-pointer items-center justify-center rounded-2xl border border-dashed px-4 text-center transition-colors"
+									class="bg-input/30 input flex h-[100px] cursor-pointer items-center justify-center rounded-2xl border border-dashed px-4 text-center transition-colors"
 									onclick={() => fileInputElement?.click()}
 									onkeydown={() => fileInputElement?.click()}
 									role="button"
