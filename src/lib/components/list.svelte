@@ -10,22 +10,17 @@
 
 <div class="h-full" use:droppable={{ container: tab.id, callbacks: { onDrop: handleDrop } }}>
 	<Card.Root
-		class="flex h-full w-[240px] flex-shrink-0 flex-col gap-3 overflow-y-auto bg-zinc-950 p-1 [&::-webkit-scrollbar]:h-2
-  [&::-webkit-scrollbar]:w-2
-  [&::-webkit-scrollbar-thumb]:rounded-full
-  [&::-webkit-scrollbar-thumb]:bg-gray-300
-  dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100
-  dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
+		class="custom-scroll bg-background flex h-full w-[240px] flex-shrink-0 flex-col gap-3 overflow-y-auto p-1"
 	>
 		<Card.Header class="flex flex-col gap-2 p-1">
-			<div class="flex items-center justify-between">
+			<div class="flex w-full items-center justify-between">
 				<Card.Title class=" text-base">{tab.title}</Card.Title>
 				<Card.Description
 					>{toCurrency(tab.tasks.reduce((sum: number, task: Task) => sum + (task.price || 0), 0))}
 					&#8364</Card.Description
 				>
 			</div>
-			<hr class=" border-2" style="border-color: {tab.color}" />
+			<hr class=" w-full border-2" style="border-color: {tab.color}" />
 
 			<!-- <AddTask {materials} {clients} {users} {tab} {products} {taskForm} /> -->
 		</Card.Header>

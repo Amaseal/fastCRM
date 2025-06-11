@@ -12,7 +12,6 @@ export type Session = InferSelectModel<typeof session>;
 export type Material = InferSelectModel<typeof material>;
 export type Task = InferSelectModel<typeof task>;
 export type Tab = InferSelectModel<typeof tab>;
-export type Tag = InferSelectModel<typeof tag>;
 export type TaskMaterial = InferSelectModel<typeof taskMaterial>;
 export type TaskProduct = InferSelectModel<typeof taskProduct>;
 export type File = InferSelectModel<typeof file>; // Add file type
@@ -81,19 +80,11 @@ export const tab = table('tabs', {
 	id: t.int('id').primaryKey({ autoIncrement: true }),
 	title: t.text('title').notNull(),
 	color: t.text('color').notNull(),
-	tagId: t.int('tag').references(() => tag.id),
-	isProtected: t.integer('is_protected', { mode: 'boolean' }).default(false).notNull(), // Prevent deletion if true
-	...timestamps
-});
-
-export const tag = table('tags', {
-	id: t.int('id').primaryKey({ autoIncrement: true }),
-	title: t.text('title'),
-	tag: t.text('tag').notNull(),
 	order: t.int('order').default(0).notNull(),
 	isProtected: t.integer('is_protected', { mode: 'boolean' }).default(false).notNull(), // Prevent deletion if true
 	...timestamps
 });
+
 
 export const notification = table('notifications', {
 	id: t.int('id').primaryKey({ autoIncrement: true }),
@@ -198,17 +189,10 @@ export const userRelations = relations(user, ({ many }) => ({
 	managedTasks: many(task, { relationName: 'managedTasks' }),
 	responsibleTasks: many(task, { relationName: 'responsibleTasks' })
 }));
-export const tagRelations = relations(tag, ({ many }) => ({
-	tabs: many(tab)
-}));
 
 // Relations for Tab
 export const tabRelations = relations(tab, ({ many, one }) => ({
 	tasks: many(task),
-	tag: one(tag, {
-		fields: [tab.tagId],
-		references: [tag.id]
-	})
 }));
 
 export const materialRelations = relations(material, ({ many }) => ({

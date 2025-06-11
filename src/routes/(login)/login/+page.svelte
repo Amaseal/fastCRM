@@ -6,6 +6,7 @@
 	import { userSchema, type UserSchema } from '../schema';
 	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data }: { data: { form: SuperValidated<Infer<UserSchema>> } } = $props();
 
@@ -16,11 +17,11 @@
 	const { form: formData, enhance } = form;
 </script>
 
-<div class="flex h-screen w-full items-center justify-center px-4">
+<div class="flex h-screen w-full items-center justify-center bg-[url(background.svg)] px-4">
 	<Card.Root class="mx-auto w-full max-w-sm">
 		<Card.Header>
-			<Card.Title class="text-2xl">Reģistrēties</Card.Title>
-			<Card.Description>Ievadi e-pastu un paroli lai reģistrētos</Card.Description>
+			<Card.Title class="text-2xl">Pieslēgties</Card.Title>
+			<Card.Description>Ievadi e-pastu un paroli lai pieslēgtos</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form method="post" use:enhance>
@@ -29,15 +30,6 @@
 						{#snippet children({ props }: { props: Record<string, any> })}
 							<Form.Label>Epasts</Form.Label>
 							<Input {...props} bind:value={$formData.email} />
-						{/snippet}
-					</Form.Control>
-					<Form.FieldErrors />
-				</Form.Field>
-				<Form.Field {form} name="name">
-					<Form.Control>
-						{#snippet children({ props }: { props: Record<string, any> })}
-							<Form.Label>Vārds</Form.Label>
-							<Input {...props} bind:value={$formData.name} />
 						{/snippet}
 					</Form.Control>
 					<Form.FieldErrors />
@@ -51,7 +43,11 @@
 					</Form.Control>
 					<Form.FieldErrors />
 				</Form.Field>
-				<Form.Button disabled={!form}>Reģistrēties</Form.Button>
+				<div class="flex items-center gap-2">
+					<Form.Button disabled={!form}>Pieslēgties</Form.Button>
+					<span class="ml-auto">vai</span>
+					<Button href="/register" variant="ghost">Reģistrēties</Button>
+				</div>
 			</form>
 		</Card.Content>
 	</Card.Root>

@@ -1,13 +1,13 @@
-import { type Actions } from '@sveltejs/kit';
+
 import { db } from '$lib/server/db';
-import { task, tab, client, user, material, product, tag, file, taskMaterial, taskProduct, type Tag } from '$lib/server/db/schema';
-import { asc, desc, eq, and, like, or, sql, inArray, count, ne } from 'drizzle-orm';
-import { superValidate, fail, message, type SuperValidated } from 'sveltekit-superforms';
+import { task, tab, client, material, product } from '$lib/server/db/schema';
+import { asc,  eq, and,  or, sql } from 'drizzle-orm';
+import { superValidate} from 'sveltekit-superforms';
 import { taskSchema } from './schema';
 
 import { zod } from 'sveltekit-superforms/adapters';
 import type { TabWithRelations, TaskWithRelations } from '$lib/types';
-import { groupTabsByTag, groupTasksByTab } from '$lib/server/utils';
+import {  groupTasksByTab } from '$lib/server/utils';
 
 
 
@@ -53,12 +53,7 @@ export const load = async ({ url, locals }) => {
 	if (clientFilter) {
 		taskConditions.push(eq(task.clientId, Number(clientFilter)));
 	} // Fetch all tabs except the Done tab (tag 'done')
-	const doneTag = await db.query.tag.findFirst({ where: eq(tag.tag, 'done') });
-	const tabs = (await db.query.tab.findMany({
-		orderBy: [asc(tab.title)],
-		with: { tag: true },
-		where: doneTag ? ne(tab.tagId, doneTag.id) : undefined
-	})) as TabWithRelations[];	// Fetch tasks with relations
+
 	let tasksQuery = db.query.task.findMany({
 		where: taskConditions.length > 0 ? and(...taskConditions) : undefined,
 		with: {
@@ -75,11 +70,10 @@ export const load = async ({ url, locals }) => {
 					product: true
 				}
 			},
-			files: true // Include files relation
+			files: true,
 		}
 	});
 	const tasks = (await tasksQuery) as TaskWithRelations[];
-	const tabsWithTasks = groupTasksByTab(tasks, tabs);
 
 	const materials = await db.query.material.findMany({
 		orderBy: [asc(material.title)]
@@ -94,24 +88,25 @@ export const load = async ({ url, locals }) => {
 		orderBy: [asc(product.title)]
 	});
 
-	// Fetch all tags except the Done tag (tag 'done')
-	const tags = await db.query.tag.findMany({
-		orderBy: [asc(tag.order), asc(tag.title)],
-		where: ne(tag.tag, 'done')
-	});
+
+
+	const tabs = (await db.query.tab.findMany({
+		orderBy: [asc(tab.order)],
+	})) as TabWithRelations[];
+
+	const tabsWithTasks = groupTasksByTab(tasks, tabs);
+
 
 	// Group tabs by their tags
-	const tabsByTag = groupTabsByTag(tabsWithTasks, tags);
+
 	const taskForm = await superValidate(zod(taskSchema));
 
 	return {
 		tabs: tabsWithTasks,
-		tabsByTag, // Add the grouped tabs by tag
 		materials,
 		clients,
 		users,
 		products,
-		tags,
 		taskForm
 	};
 };

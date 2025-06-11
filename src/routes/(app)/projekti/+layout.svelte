@@ -6,16 +6,10 @@
 	import { disableScroll } from '$lib/disableScroll';
 	import type { DragDropState } from '@thisux/sveltednd';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import type { Task, Tab, Tag } from '$lib/server/db/schema.js';
-	// import TagManager from '$lib/components/TagManager.svelte';
-	// import TabManager from '$lib/components/TabManager.svelte';
 	import { debounce } from '$lib/utils';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import { Button } from '$lib/components/ui/button/index.js';
 
 	let { data, children } = $props();
@@ -111,14 +105,16 @@
 			value={searchTerm}
 			oninput={handleSearchInput}
 		/>
-		<Button href="/audumi/pievienot" variant="outline" class="ml-auto flex items-center gap-2"
-			><Plus />Pievienot</Button
+		<Button
+			href="/projekti/saraksti/pievienot"
+			variant="outline"
+			class="ml-auto flex items-center gap-2"><Plus />Pievienot</Button
 		>
 	</div>
 </header>
 <div
 	use:horizontalDragScroll={$disableScroll}
-	class="flex h-[calc(100vh-80px)] gap-4 overflow-x-auto pb-2
+	class="flex h-[calc(100vh-110px)] gap-4 overflow-x-auto pb-2
 						[&::-webkit-scrollbar]:h-2
 						[&::-webkit-scrollbar]:w-1
 						[&::-webkit-scrollbar-thumb]:rounded-full
@@ -126,17 +122,7 @@
 						dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100
 						dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
 >
-	{#each data.tags as tagItem (tagItem.id)}
-		{#if data.tabsByTag[tagItem.tag] && data.tabsByTag[tagItem.tag].length > 0}
-			{#each data.tabsByTag[tagItem.tag] as tab (tab.id)}
-				<List
-					{handleDrop}
-					{tab}
-					materials={data.materials}
-					clients={data.clients}
-					users={data.users}
-				/>
-			{/each}
-		{/if}
+	{#each data.tabs as tab (tab.id)}
+		<List {handleDrop} {tab} materials={data.materials} clients={data.clients} users={data.users} />
 	{/each}
 </div>
