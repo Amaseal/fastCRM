@@ -53,7 +53,13 @@
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Krāsa</Form.Label>
-								<Input type="color" placeholder="fff" {...props} bind:value={$formData.color} />
+								<Input
+									type="color"
+									class="p-0"
+									placeholder="fff"
+									{...props}
+									bind:value={$formData.color}
+								/>
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />

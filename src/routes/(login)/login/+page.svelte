@@ -17,6 +17,10 @@
 	const { form: formData, enhance } = form;
 </script>
 
+<svelte:head>
+	<title>Pieslēgties</title>
+</svelte:head>
+
 <div class="flex h-screen w-full items-center justify-center bg-[url(background.svg)] px-4">
 	<Card.Root class="mx-auto w-full max-w-sm">
 		<Card.Header>

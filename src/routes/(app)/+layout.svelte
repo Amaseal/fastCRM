@@ -32,7 +32,7 @@
 					{:else if $flash.type === 'success'}
 						<Alert.Root class="absolute right-6 bottom-6 z-[1000] max-w-96">
 							<CheckCircle2Icon />
-							<Alert.Title>izdevās!</Alert.Title>
+							<Alert.Title>Izdevās!</Alert.Title>
 							<Alert.Description>{$flash.message}</Alert.Description>
 						</Alert.Root>
 					{/if}

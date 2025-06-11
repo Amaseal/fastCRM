@@ -120,20 +120,30 @@
 }
 
 @layer utilities {
-	.custom-scroll {
-		@apply overflow-y-auto;
-	}
+    .custom-scroll {
+        @apply overflow-y-auto;
+    }
 
-	.custom-scroll::-webkit-scrollbar {
-		width: 0.5rem;
-		height: 0.5rem;
-	}
+    .custom-scroll::-webkit-scrollbar {
+        width: 0.5rem;
+        height: 0.5rem;
+    }
 
-	.custom-scroll::-webkit-scrollbar-track {
-		@apply rounded-full bg-gray-100 dark:bg-zinc-900;
-	}
+    .custom-scroll::-webkit-scrollbar-track {
+        border-radius: 9999px;
+        background: var(--sidebar, #f3f4f6); /* fallback to gray-100 */
+    }
 
-	.custom-scroll::-webkit-scrollbar-thumb {
-		@apply bg-gray-300 dark:bg-zinc-800;
-	}
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: var(--border, #d1d5db); /* fallback to gray-300 */
+        border-radius: 9999px;
+    }
+
+    .dark .custom-scroll::-webkit-scrollbar-track {
+        background: var(--sidebar, #18181b); /* fallback to zinc-900 */
+    }
+
+    .dark .custom-scroll::-webkit-scrollbar-thumb {
+        background: var(--input, #27272a); /* fallback to zinc-800 */
+    }
 }

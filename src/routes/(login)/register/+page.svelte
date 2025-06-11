@@ -15,6 +15,10 @@
 	const { form: formData, enhance } = form;
 </script>
 
+<svelte:head>
+	<title>Reģistrēties</title>
+</svelte:head>
+
 <div
 	class="flex h-screen w-full items-center justify-center bg-[url(background.svg)] bg-cover bg-left px-4"
 >

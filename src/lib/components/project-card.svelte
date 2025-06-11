@@ -170,20 +170,6 @@
 	<Print />
 </div> -->
 
-{#if editOpen}
-	<Dialog.Root open={editOpen} onOpenChange={(open) => (editOpen = open)}>
-		<!-- <EditTask
-			task={task}
-			{materials}
-			{clients}
-			{users}
-			{tab}
-			products={[]}
-			close={() => editOpen = false}
-		/> -->
-	</Dialog.Root>
-{/if}
-
 <style>
 	.missed {
 		border-bottom: 2px solid red;

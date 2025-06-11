@@ -6,22 +6,35 @@
 
 	import ProjectCard from './project-card.svelte';
 	import type { Task } from '$lib/server/db/schema';
+	import { Button } from './ui/button';
+	import Plus from '@lucide/svelte/icons/plus';
+	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 </script>
 
 <div class="h-full" use:droppable={{ container: tab.id, callbacks: { onDrop: handleDrop } }}>
 	<Card.Root
-		class="custom-scroll bg-background flex h-full w-[240px] flex-shrink-0 flex-col gap-3 overflow-y-auto p-1"
+		class="custom-scroll bg-background relative flex h-full w-[240px] flex-shrink-0 flex-col gap-0 overflow-y-auto p-1"
 	>
-		<Card.Header class="flex flex-col gap-2 p-1">
-			<div class="flex w-full items-center justify-between">
-				<Card.Title class=" text-base">{tab.title}</Card.Title>
+		<Card.Header class="justify-streatch flex flex-col gap-2 p-1">
+			<div class="flex w-full items-center gap-2">
+				<Button variant="ghost" href="/projekti/saraksti/labot/{tab.id}">
+					<Card.Title class="text-base">{tab.title}</Card.Title>
+				</Button>
+
 				<Card.Description
 					>{toCurrency(tab.tasks.reduce((sum: number, task: Task) => sum + (task.price || 0), 0))}
 					&#8364</Card.Description
 				>
+				<div class="ml-auto">
+					<Button variant="ghost"><GripVertical size="14" /></Button>
+				</div>
 			</div>
+
 			<hr class=" w-full border-2" style="border-color: {tab.color}" />
 
+			<Button variant="ghost" class="w-full" href="/projekti/pievienot"
+				><Plus size="14"></Plus></Button
+			>
 			<!-- <AddTask {materials} {clients} {users} {tab} {products} {taskForm} /> -->
 		</Card.Header>
 		<Card.Content class="flex h-full flex-col gap-3 p-1">

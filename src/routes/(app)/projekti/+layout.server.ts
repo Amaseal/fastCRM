@@ -1,15 +1,12 @@
-
 import { db } from '$lib/server/db';
 import { task, tab, client, material, product } from '$lib/server/db/schema';
-import { asc,  eq, and,  or, sql } from 'drizzle-orm';
-import { superValidate} from 'sveltekit-superforms';
+import { asc, eq, and, or, sql } from 'drizzle-orm';
+import { superValidate } from 'sveltekit-superforms';
 import { taskSchema } from './schema';
 
 import { zod } from 'sveltekit-superforms/adapters';
 import type { TabWithRelations, TaskWithRelations } from '$lib/types';
-import {  groupTasksByTab } from '$lib/server/utils';
-
-
+import { groupTasksByTab } from '$lib/server/utils';
 
 export const load = async ({ url, locals }) => {
 	const search = url.searchParams.get('search') || '';
@@ -70,32 +67,16 @@ export const load = async ({ url, locals }) => {
 					product: true
 				}
 			},
-			files: true,
+			files: true
 		}
 	});
 	const tasks = (await tasksQuery) as TaskWithRelations[];
 
-	const materials = await db.query.material.findMany({
-		orderBy: [asc(material.title)]
-	});
-
-	const clients = await db.query.client.findMany({
-		orderBy: [asc(client.name)]
-	});
-
-	const users = await db.query.user.findMany();
-	const products = await db.query.product.findMany({
-		orderBy: [asc(product.title)]
-	});
-
-
-
 	const tabs = (await db.query.tab.findMany({
-		orderBy: [asc(tab.order)],
+		orderBy: [asc(tab.order)]
 	})) as TabWithRelations[];
 
 	const tabsWithTasks = groupTasksByTab(tasks, tabs);
-
 
 	// Group tabs by their tags
 
@@ -103,10 +84,6 @@ export const load = async ({ url, locals }) => {
 
 	return {
 		tabs: tabsWithTasks,
-		materials,
-		clients,
-		users,
-		products,
 		taskForm
 	};
 };
@@ -259,7 +236,6 @@ export const load = async ({ url, locals }) => {
 // 				}
 // 			}			// Process the description - always stringify the JSON object
 
-
 // 			// Create the task with all available fields
 // 			const [newTask] = await db
 // 				.insert(task)
@@ -287,8 +263,6 @@ export const load = async ({ url, locals }) => {
 // 					});
 // 				}
 // 			}
-
-
 
 // 			// Associate products with the task through the junction table
 // 			if (taskProducts && taskProducts.length > 0) {

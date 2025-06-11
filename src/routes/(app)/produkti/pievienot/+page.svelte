@@ -17,8 +17,6 @@
 	});
 
 	const { form: formData, enhance } = form;
-
-	$inspect($formData);
 </script>
 
 <svelte:head>
