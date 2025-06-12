@@ -24,7 +24,10 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { page } from '$app/state';
 	import type { Client, Material, Product, User } from '$lib/server/db/schema';
-	import ClientSelect from '$lib/components/client-select.svelte';
+	import ClientSelect from '../client-select.svelte';
+	import MultiSelectCombobox from '../multi-select-combobox.svelte';
+	import TaskFiles from '../task-files.svelte';
+	import ProductSelect from '../product-select.svelte';
 
 	let {
 		data
@@ -62,6 +65,8 @@
 		{ value: 'Lielvārde', label: 'Lielvārde' },
 		{ value: 'Pagrabs', label: 'Pagrabs' }
 	];
+
+	$inspect($formData);
 </script>
 
 <svelte:head>
@@ -69,7 +74,7 @@
 </svelte:head>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-	<div class="max-h-[90vh] w-full max-w-[90vw] overflow-hidden rounded-lg">
+	<div class="max-h-[90vh] w-full max-w-[90vw] overflow-hidden rounded-lg xl:max-w-[60vw]">
 		<Card.Root
 			class="custom-scroll relative max-h-[90vh] w-full max-w-[90vw]  gap-2 overflow-y-auto"
 		>
@@ -195,9 +200,20 @@
 									<Form.FieldErrors />
 								</Form.Field>
 							</div>
+							<div class="w-full">
+								<MultiSelectCombobox materials={data.materials} {form} />
+							</div>
 
 							<div class="w-full">
 								<ClientSelect clients={data.clients} {form} />
+							</div>
+
+							<div>
+								<label for="files">Faili:</label>
+								<TaskFiles {form} />
+							</div>
+							<div class="w-full">
+								<ProductSelect products={data.products} {form} />
 							</div>
 						</div>
 

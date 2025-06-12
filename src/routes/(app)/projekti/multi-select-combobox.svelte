@@ -1,0 +1,118 @@
+<script lang="ts">
+	import { cn } from '$lib/utils';
+	import type { Material } from '$lib/server/db/schema';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Command from '$lib/components/ui/command/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import type { taskSchema } from './schema';
+	import { type SuperForm } from 'sveltekit-superforms';
+	import z from 'zod';
+	import { useId } from 'bits-ui';
+	import { CheckIcon, ChevronsUpDownIcon } from '@lucide/svelte';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+
+	interface Option {
+		value: string;
+		label: string;
+		remaining?: number;
+	}
+	const triggerId = useId();
+	let {
+		value = $bindable(),
+		materials = [],
+		form
+	} = $props<{
+		value?: number[];
+		materials?: Material[];
+		form: SuperForm<z.infer<typeof taskSchema>>;
+	}>();
+
+	let formData = form.form;
+	let open = $state(false);
+	let selectedMaterials = $state([]) as string[];
+
+	const options = materials.map(({ id, title, remaining }: Material) => ({
+		value: String(id), // Keep as string for the component, but convert back to number when submitting
+		label: title,
+		remaining: remaining
+	}));
+
+	function toggleMaterial(id: string) {
+		if (selectedMaterials.includes(id)) {
+			selectedMaterials = selectedMaterials.filter((cid) => cid !== id);
+		} else {
+			selectedMaterials = [...selectedMaterials, id];
+		}
+		$formData.materialIds = selectedMaterials; // keep form data in sync
+	}
+</script>
+
+<div class="relative">
+	<Form.Field {form} name="clientId" class="flex w-full flex-col">
+		<Popover.Root bind:open>
+			<Form.Control id={triggerId}>
+				{#snippet children({ props })}
+					<Form.Label>Audumi</Form.Label>
+					<Popover.Trigger
+						class={cn(
+							buttonVariants({ variant: 'outline' }),
+							'justify-between px-3 font-normal',
+							!$formData.clientId && 'text-muted-foreground'
+						)}
+						role="combobox"
+						{...props}
+					>
+						{#if selectedMaterials.length}
+							<div class="flex flex-wrap gap-1">
+								{#each options.filter( (opt: { value: string }) => selectedMaterials.includes(opt.value) ) as opt (opt.value)}
+									<span
+										class="bg-card text-foreground inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+									>
+										{opt.label}
+										<button
+											type="button"
+											class="hover:text-primary ml-1 cursor-pointer text-xl text-gray-500 focus:outline-none"
+											onclick={() => toggleMaterial(opt.value)}
+											aria-label="Noņemt"
+										>
+											&times;
+										</button>
+									</span>
+								{/each}
+							</div>
+						{:else}
+							izvēlēties audumu...
+						{/if}
+						<ChevronsUpDownIcon class="opacity-50" />
+					</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
+					{#each selectedMaterials as id}
+						<input type="hidden" name={props.name} value={id} />
+					{/each}
+				{/snippet}
+			</Form.Control>
+			<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
+				<Command.Root class="w-full max-w-full">
+					<Command.Input autofocus placeholder="Meklēt audumu..." class="h-9" />
+					<Command.Empty>Šāds audums netika atrasts</Command.Empty>
+					<Command.Group value="clients">
+						{#each options as material (material.value)}
+							<Command.Item value={material.label} onSelect={() => toggleMaterial(material.value)}>
+								{material.label}
+								<Separator orientation="vertical" />
+								<span> Atlicis: ({material.remaining})</span>
+
+								<CheckIcon
+									class={cn(
+										'ml-auto',
+										!selectedMaterials.includes(material.value) && 'text-transparent'
+									)}
+								/>
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
+	</Form.Field>
+</div>
