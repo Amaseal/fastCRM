@@ -8,7 +8,6 @@ import { redirect } from '@sveltejs/kit';
 
 export const load = async () => {
     const form = await superValidate(zod(productSchema));
-
     return {
         form
     };

@@ -15,7 +15,7 @@
 
 	import { Input } from '$lib/components/ui/input/index.js';
 	import type { Client } from '$lib/server/db/schema';
-	import type { taskSchema } from '../schema';
+	import type { taskSchema } from './schema';
 
 	let { clients, form } = $props<{
 		clients?: Client[];
