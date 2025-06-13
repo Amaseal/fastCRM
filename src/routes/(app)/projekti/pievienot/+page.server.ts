@@ -117,7 +117,8 @@ export const actions = {
 					responsiblePersonId: responsiblePersonId || null,
 					managerId: currentUser.id,
 					endDate: endDate || null,
-					preview: preview || null
+					preview: preview || null,
+					seamstress: seamstress || null,
 				})
 				.returning({ id: task.id });
 
