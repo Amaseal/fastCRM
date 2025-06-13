@@ -28,6 +28,8 @@
 	import MultiSelectCombobox from '../multi-select-combobox.svelte';
 	import TaskFiles from '../task-files.svelte';
 	import ProductSelect from '../product-select.svelte';
+	import MoneyInput from '$lib/components/ui/input/money-input.svelte';
+	import Dropzone from '$lib/components/dropzone.svelte';
 
 	let {
 		data
@@ -36,6 +38,7 @@
 			form: SuperValidated<Infer<TaskSchema>>;
 			users: User[];
 			clients: Client[];
+			tabId: number;
 			materials: Material[];
 			products: Product[];
 		};
@@ -56,6 +59,15 @@
 		data.users.find((f: { id: string }) => f.id === $formData.responsiblePersonId)?.name ??
 			'Izvēlēties'
 	);
+
+	$effect(() => {
+		if (!$formData.tabId) {
+			$formData.tabId = data.tabId;
+		}
+		if (!$formData.managerId) {
+			$formData.managerId = currentUser?.id;
+		}
+	});
 	let placeholder = $state<DateValue>(today(getLocalTimeZone()));
 
 	const seamstresses = [
@@ -65,8 +77,6 @@
 		{ value: 'Lielvārde', label: 'Lielvārde' },
 		{ value: 'Pagrabs', label: 'Pagrabs' }
 	];
-
-	$inspect($formData);
 </script>
 
 <svelte:head>
@@ -89,6 +99,9 @@
 			</Card.Header>
 			<Card.Content class="p-6 pb-2">
 				<form method="POST" use:enhance>
+					<!-- Hidden field to submit tabId -->
+					<input type="hidden" name="tabId" bind:value={$formData.tabId} />
+
 					<div class="flex gap-2">
 						<div class="w-1/2">
 							<div class="flex gap-2">
@@ -127,7 +140,6 @@
 														value={value as DateValue}
 														bind:placeholder
 														minValue={new CalendarDate(1900, 1, 1)}
-														maxValue={today(getLocalTimeZone())}
 														calendarLabel="Nodošanas datums"
 														onValueChange={(v) => {
 															if (v) {
@@ -199,6 +211,15 @@
 									</Form.Control>
 									<Form.FieldErrors />
 								</Form.Field>
+								<Form.Field {form} name="price">
+									<Form.Control>
+										{#snippet children({ props })}
+											<Form.Label>Cena</Form.Label>
+											<MoneyInput {...props} bind:value={$formData.price} />
+										{/snippet}
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
 							</div>
 							<div class="w-full">
 								<MultiSelectCombobox materials={data.materials} {form} />
@@ -219,9 +240,12 @@
 
 						<div class="w-1/2">
 							<label for="/">Apraksts</label>
-							<Edra />
+							<Edra bind:value={$formData.description} name="description" />
 						</div>
 					</div>
+					<Dropzone bind:value={$formData.preview} />
+					<input type="hidden" name="tabId" bind:value={$formData.tabId} />
+					<input type="hidden" name="managerId" bind:value={$formData.managerId} />
 
 					<div class="mt-6 flex justify-end">
 						<Button type="submit">Saglabāt</Button>
@@ -229,5 +253,9 @@
 				</form>
 			</Card.Content>
 		</Card.Root>
+	</div>
+	<div class="w-80 bg-gray-100 p-4 text-xs dark:bg-gray-800">
+		<h3 class="mb-2 font-bold">Form Data:</h3>
+		<pre class="whitespace-pre-wrap">{JSON.stringify($formData, null, 2)}</pre>
 	</div>
 </div>

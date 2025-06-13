@@ -9,7 +9,7 @@
 	import { type SuperForm } from 'sveltekit-superforms';
 	import z from 'zod';
 	import { useId } from 'bits-ui';
-	import { CheckIcon, ChevronsUpDownIcon } from '@lucide/svelte';
+	import { CheckIcon, ChevronsUpDownIcon, X } from '@lucide/svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 
 	interface Option {
@@ -57,8 +57,7 @@
 					<Popover.Trigger
 						class={cn(
 							buttonVariants({ variant: 'outline' }),
-							'justify-between px-3 font-normal',
-							!$formData.clientId && 'text-muted-foreground'
+							'text-muted-foreground justify-between px-3 font-normal'
 						)}
 						role="combobox"
 						{...props}
@@ -73,16 +72,19 @@
 										<button
 											type="button"
 											class="hover:text-primary ml-1 cursor-pointer text-xl text-gray-500 focus:outline-none"
-											onclick={() => toggleMaterial(opt.value)}
+											onclick={(e) => {
+												e.stopPropagation();
+												toggleMaterial(opt.value);
+											}}
 											aria-label="Noņemt"
 										>
-											&times;
+											<X />
 										</button>
 									</span>
 								{/each}
 							</div>
 						{:else}
-							izvēlēties audumu...
+							Izvēlēties audumu...
 						{/if}
 						<ChevronsUpDownIcon class="opacity-50" />
 					</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
@@ -97,7 +99,12 @@
 					<Command.Empty>Šāds audums netika atrasts</Command.Empty>
 					<Command.Group value="clients">
 						{#each options as material (material.value)}
-							<Command.Item value={material.label} onSelect={() => toggleMaterial(material.value)}>
+							<Command.Item
+								value={material.label}
+								onSelect={() => {
+									toggleMaterial(material.value);
+								}}
+							>
 								{material.label}
 								<Separator orientation="vertical" />
 								<span> Atlicis: ({material.remaining})</span>

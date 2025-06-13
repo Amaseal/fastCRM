@@ -127,6 +127,7 @@ export const task = table('tasks', {
 	tabId: t.int('tab').references(() => tab.id),
 	clientId: t.int('client').references(() => client.id),
 	managerId: t.text('manager').references(() => user.id),
+	seamstress: t.text('seamstress'), // Optional seamstress field
 	responsiblePersonId: t.text('responsible_person').references(() => user.id),
 	count: t.int('count'),
 	endDate: t.text('end_date'),

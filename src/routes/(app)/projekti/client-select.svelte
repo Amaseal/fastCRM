@@ -73,7 +73,14 @@
 					<Command.Input autofocus placeholder="Meklēt klientu..." class="h-9" />
 					<Command.Empty
 						>Šāds klients netika atrasts
-						<Button variant="ghost" onclick={() => (showAddForm = true)}>Pievienot</Button>
+						<Button
+							variant="ghost"
+							onclick={() => {
+								showAddForm = true;
+								$formData.clientId = '';
+								$formData.newClientType = 'BTC';
+							}}>Pievienot</Button
+						>
 					</Command.Empty>
 					<Command.Group value="clients">
 						{#each clientOptions as client (client.value)}

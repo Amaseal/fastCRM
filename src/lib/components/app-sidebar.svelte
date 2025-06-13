@@ -10,6 +10,7 @@
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
+	import Save from '@lucide/svelte/icons/save';
 
 	const items = [
 		{
@@ -41,6 +42,11 @@
 			title: 'Produkti',
 			url: '/produkti',
 			icon: Blocks
+		},
+		{
+			title: 'Faili',
+			url: '/faili',
+			icon: Save
 		}
 	];
 

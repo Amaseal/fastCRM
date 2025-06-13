@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { tab, handleDrop, materials, clients, users } = $props();
+	let { tab, handleDrop } = $props();
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { droppable } from '@thisux/sveltednd';
 	import { toCurrency } from '$lib/utils';
@@ -29,10 +29,9 @@
 					<Button variant="ghost"><GripVertical size="14" /></Button>
 				</div>
 			</div>
-
 			<hr class=" w-full border-2" style="border-color: {tab.color}" />
 
-			<Button variant="ghost" class="w-full" href="/projekti/pievienot"
+			<Button variant="ghost" class="w-full" href="/projekti/pievienot?tabId={tab.id}"
 				><Plus size="14"></Plus></Button
 			>
 			<!-- <AddTask {materials} {clients} {users} {tab} {products} {taskForm} /> -->
@@ -46,7 +45,7 @@
 				</div>
 			{:else}
 				{#each tab.tasks as task}
-					<ProjectCard {task} container={tab.id} {materials} {clients} {users} {tab} />
+					<ProjectCard {task} container={tab.id} />
 				{/each}
 			{/if}
 		</Card.Content>

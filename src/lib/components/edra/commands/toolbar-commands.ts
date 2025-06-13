@@ -196,66 +196,6 @@ const commands: Record<string, EdraToolBarCommands[]> = {
 				return editor.isActive('strike');
 			}
 		},
-		{
-			icon: Quote,
-			name: 'blockQuote',
-			tooltip: 'BlockQuote',
-			shortCut: `${isMac ? '⌘⇧' : 'Ctrl+Shift+'}B`,
-			onClick: (editor) => {
-				editor.chain().focus().toggleBlockquote().run();
-			},
-			clickable: (editor) => {
-				return editor.can().toggleBlockquote();
-			},
-			isActive: (editor) => {
-				return editor.isActive('blockquote');
-			}
-		},
-		{
-			icon: Code,
-			name: 'code',
-			tooltip: 'Inline Code',
-			shortCut: `${isMac ? '⌘' : 'Ctrl+'}E`,
-			onClick: (editor) => {
-				editor.chain().focus().toggleCode().run();
-			},
-			clickable: (editor) => {
-				return editor.can().toggleCode();
-			},
-			isActive: (editor) => {
-				return editor.isActive('code');
-			}
-		},
-		{
-			icon: Superscript,
-			name: 'superscript',
-			tooltip: 'Superscript',
-			shortCut: `${isMac ? '⌘' : 'Ctrl+'}.`,
-			onClick: (editor) => {
-				editor.chain().focus().toggleSuperscript().run();
-			},
-			clickable: (editor) => {
-				return editor.can().toggleSuperscript();
-			},
-			isActive: (editor) => {
-				return editor.isActive('superscript');
-			}
-		},
-		{
-			icon: Subscript,
-			name: 'subscript',
-			tooltip: 'Subscript',
-			shortCut: `${isMac ? '⌘' : 'Ctrl+'},`,
-			onClick: (editor) => {
-				editor.chain().focus().toggleSubscript().run();
-			},
-			clickable: (editor) => {
-				return editor.can().toggleSubscript();
-			},
-			isActive: (editor) => {
-				return editor.isActive('subscript');
-			}
-		}
 	],
 	alignment: [
 		{
@@ -332,16 +272,6 @@ const commands: Record<string, EdraToolBarCommands[]> = {
 			},
 			isActive: (editor) => editor.isActive('orderedList')
 		},
-		{
-			icon: ListChecks,
-			name: 'taskList',
-			tooltip: 'Task List',
-			shortCut: `${isMac ? '⌘⇧' : 'Ctrl+Shift+'}9`,
-			onClick: (editor) => {
-				editor.chain().focus().toggleTaskList().run();
-			},
-			isActive: (editor) => editor.isActive('taskList')
-		}
 	],
 	media: [
 		{
@@ -353,33 +283,6 @@ const commands: Record<string, EdraToolBarCommands[]> = {
 			},
 			isActive: (editor) => editor.isActive('image-placeholder')
 		},
-		{
-			icon: Video,
-			name: 'video-placeholder',
-			tooltip: 'Video Placeholder',
-			onClick: (editor) => {
-				editor.chain().focus().insertVideoPlaceholder().run();
-			},
-			isActive: (editor) => editor.isActive('video-placeholder')
-		},
-		{
-			icon: Audio,
-			name: 'audio-placeholder',
-			tooltip: 'Audio Placeholder',
-			onClick: (editor) => {
-				editor.chain().focus().insertAudioPlaceholder().run();
-			},
-			isActive: (editor) => editor.isActive('audio-placeholder')
-		},
-		{
-			icon: IFrame,
-			name: 'iframe-placeholder',
-			tooltip: 'IFrame Placeholder',
-			onClick: (editor) => {
-				editor.chain().focus().insertIFramePlaceholder().run();
-			},
-			isActive: (editor) => editor.isActive('iframe-placeholder')
-		}
 	],
 	table: [
 		{

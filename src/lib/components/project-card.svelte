@@ -8,14 +8,14 @@
 	import Hourglass from '@lucide/svelte/icons/hourglass';
 	import Handshake from '@lucide/svelte/icons/handshake';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
-	import { disableScroll } from '$lib/disableScroll';
+	import { disableScroll } from '$lib/stores';
 
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
-	let { task, container, materials, clients, users, tab } = $props();
+	let { task, container } = $props();
 
 	let printableRef: HTMLDivElement;
 

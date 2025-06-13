@@ -2,7 +2,7 @@
 	import { cn } from '$lib/utils.js';
 
 	let {
-		value = $bindable(),
+		value = $bindable(0),
 		min = 1,
 		step = 1,
 		class: className = ''
@@ -17,7 +17,7 @@
 	}
 </script>
 
-<div class={cn('flex items-center gap-1', className)}>
+<div class={cn('flex items-start gap-1', className)}>
 	<button
 		type="button"
 		class="border-input flex h-9 w-9 items-center justify-center rounded-md border bg-transparent text-lg font-bold disabled:opacity-50"
@@ -52,6 +52,7 @@
 		margin: 0;
 	}
 	input[type='number'] {
+		appearance: textfield;
 		-moz-appearance: textfield;
 	}
 </style>

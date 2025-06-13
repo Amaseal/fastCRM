@@ -12,6 +12,8 @@
 		className = ''
 	} = $props();
 
+	$inspect(value);
+
 	let rawValue = $state('');
 	let inputValue = $state('');
 	let inputRef: any;

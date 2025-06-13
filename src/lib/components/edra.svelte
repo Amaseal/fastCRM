@@ -6,16 +6,28 @@
 		EdraDragHandleExtended
 	} from '$lib/components/edra/shadcn/index.js';
 
+	let { value = $bindable(), name } = $props<{
+		value?: string;
+		name?: string;
+	}>();
 	// Editor states
 	let content = $state<Content>();
 	let editor = $state<Editor>();
 
 	function onUpdate() {
-		content = editor?.getJSON();
+		// Update the bindable value with HTML string
+		value = editor?.getHTML() || '';
 	}
+
+	// Set initial content when value is provided
+	$effect(() => {
+		if (value) {
+			content = value;
+		}
+	});
 </script>
 
-<div class="bg-background z-50 size-full max-w-5xl rounded-md border border-dashed">
+<div class="bg-input/30 mb-4 h-[calc(100%-40px)] w-full max-w-5xl rounded-md border border-dashed">
 	{#if editor && !editor.isDestroyed}
 		<EdraToolBar
 			class="bg-secondary/50 custom-scroll flex w-full items-center overflow-x-auto border-b border-dashed p-0.5"
@@ -26,7 +38,12 @@
 	<EdraEditor
 		bind:editor
 		{content}
-		class="custom-scroll h-[30rem] max-h-screen overflow-y-scroll pr-2 pl-6"
+		class="custom-scroll h-[calc(100%-40px)] overflow-y-scroll pr-2 pl-6"
 		{onUpdate}
 	/>
+
+	<!-- Hidden input for form integration -->
+	{#if name}
+		<input type="hidden" {name} bind:value />
+	{/if}
 </div>

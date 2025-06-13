@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import List from '$lib/components/list.svelte';
 	import { horizontalDragScroll } from '$lib/horizontalScroll';
-	import { disableScroll } from '$lib/disableScroll';
+	import { disableScroll } from '$lib/stores';
 	import type { DragDropState } from '@thisux/sveltednd';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { debounce } from '$lib/utils';
@@ -123,6 +123,6 @@
 						dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
 >
 	{#each data.tabs as tab (tab.id)}
-		<List {handleDrop} {tab} materials={data.materials} clients={data.clients} users={data.users} />
+		<List {handleDrop} {tab} />
 	{/each}
 </div>

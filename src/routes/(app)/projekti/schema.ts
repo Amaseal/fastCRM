@@ -4,8 +4,7 @@ export type TaskSchema = typeof taskSchema;
 export type TaskProductSchema = typeof taskProductSchema;
 
 export const taskProductSchema = z.object({
-	id: z.number().optional(),
-	productId: z.string().min(1, { message: 'Produkta ID ir obligāts' }),
+	id: z.number().optional(),		productId: z.coerce.number().min(1, { message: 'Produkta ID ir obligāts' }), // Auto-convert string to number
 	count: z.number().int().positive({ message: 'Skaits nevar būt mazāks par 1' }).default(1)
 });
 
@@ -30,10 +29,9 @@ export const taskSchema = z
 		count: z.number().min(1, { message: 'Skaitam jābūt vismaz 1' }).default(1),
 		endDate: z.string().optional(),
 		isPrinted: z.boolean().optional().default(false),
-		files: z.array(z.number()).optional().default([]),
-		price: z.number().optional(),
+		files: z.array(z.number()).optional().default([]),		price: z.number(),
 		seamstress: z.string().optional(),
-		materialIds: z.array(z.number()).optional().default([]),
+		materialIds: z.array(z.coerce.number()).optional().default([]), // Auto-convert strings to numbers
 		preview: z.string().optional(),
 		// Support multiple products
 		taskProducts: z.array(taskProductSchema).optional().default([])

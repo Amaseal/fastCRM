@@ -203,11 +203,6 @@
 	</div>
 </header>
 <div class="mb-4 space-y-4">
-	<!-- Search and pagination controls -->
-	<div class="flex items-center justify-between">
-		<div class="w-full"></div>
-	</div>
-
 	<!-- Table -->
 	<div class="rounded-md border">
 		<Table.Root>

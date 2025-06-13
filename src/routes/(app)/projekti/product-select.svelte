@@ -2,25 +2,22 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { Button } from '$lib/components/ui/button';
-	import { superForm } from 'sveltekit-superforms';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import type { SuperForm } from 'sveltekit-superforms';
 	import type { taskSchema } from './/schema';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { z } from 'zod';
-	import { ElementField } from 'formsnap';
+	import { CheckIcon, ChevronsUpDownIcon, X } from '@lucide/svelte';
 	import NumberInput from '$lib/components/ui/input/number-input.svelte';
-
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { cn } from '$lib/utils';
+	import * as Command from '$lib/components/ui/command/index.js';
 	interface Product {
-		id: string | number;
+		id: number;
 		title: string;
 		cost: number;
 	}
 
-	interface ProductEntry {
-		productId: string;
-		count: number;
-	}
 	let {
 		products,
 		form
@@ -28,116 +25,142 @@
 		products: Product[];
 		form: SuperForm<z.infer<typeof taskSchema>>;
 		initialProductIds?: number[];
-	} = $props();
-
-	// Access form data directly
+	} = $props(); // Access form data directly
 	let formData = form.form;
 
-	// Add a new product entry
+	// Track which product fields have been touched to avoid showing validation errors prematurely
+	let touchedProducts = $state<Set<number>>(new Set()); // Ensure there's at least one product entry
+	$effect(() => {
+		if (!$formData.taskProducts || $formData.taskProducts.length === 0) {
+			$formData.taskProducts = [{ productId: 0, count: 1 }];
+		}
+	}); // Add a new product entry
 	function addEntry() {
 		if (!$formData.taskProducts) $formData.taskProducts = [];
-		$formData.taskProducts = [...$formData.taskProducts, { productId: '', count: 1 }];
+		$formData.taskProducts = [...$formData.taskProducts, { productId: 0, count: 1 }];
 	}
-
 	// Remove a product entry
 	function removeEntry(index: number) {
-		$formData.taskProducts = $formData.taskProducts.filter((_, i) => i !== index);
+		if ($formData.taskProducts) {
+			$formData.taskProducts = $formData.taskProducts.filter((_, i) => i !== index);
+		}
 	}
-
-	$inspect($formData, ' formdata');
-
-	// Calculate total price based on selected products and counts
-	function calculatePrice() {
-		let totalPrice = 0;
+	const options = products.map(({ id, title }: Product) => ({
+		value: id,
+		label: title
+	})); // Calculate total price based on selected products and counts
+	function calculateTotalPrice(): number {
+		let total = 0;
 		($formData.taskProducts || []).forEach((entry) => {
-			const product = products.find((p) => p.id.toString() === entry.productId);
-			if (product) {
-				totalPrice += product.cost * entry.count;
+			const product = products.find((p) => p.id === entry.productId);
+			if (product && entry.count > 0 && entry.productId > 0) {
+				total += product.cost * entry.count;
 			}
 		});
-		return totalPrice;
+		return total;
 	}
 
-	// Format price from cents to currency format (e.g., 1233 → 12.33)
-	function formatPriceForDisplay(priceInCents: number): string {
+	// Format price for display (assuming cost is in cents, convert to euros)
+	function formatPrice(priceInCents: number): string {
 		return (priceInCents / 100).toFixed(2);
 	}
-
-	// Watch $formData.taskProducts for changes and update price accordingly
-	$effect(() => {
-		const newPrice = calculatePrice();
-		if ($formData.price !== newPrice) {
-			$formData.price = newPrice;
-		}
-	});
+	// Reactive total price calculation
+	let totalPrice = $derived(calculateTotalPrice());
 </script>
 
-<div class="mb-3">
-	<div class="flex items-center justify-between">
-		<label for="productIds">Produkti</label>
-		<button
-			type="button"
-			onclick={addEntry}
-			class="inline-flex items-center gap-x-1 rounded-lg text-sm hover:text-violet-500"
-		>
-			Pievienot
-		</button>
-	</div>
-
-	<div class="space-y-3">
-		<Form.Fieldset {form} name="taskProducts" class="w-full">
-			{#each $formData.taskProducts as entry, index}
-				<Form.ElementField {form} name={`taskProducts[${index}]` as any} class="flex w-full gap-2">
+<div class="space-y-3">
+	<Form.Fieldset {form} name="taskProducts" class="w-full">
+		{#each $formData.taskProducts || [] as entry, index}
+			<div class="flex items-end justify-stretch gap-2">
+				<Form.Field {form} name={`taskProducts[${index}].productId`} class="flex-1">
 					<Form.Control>
 						{#snippet children({ props })}
-							<Select.Root
-								bind:value={$formData.taskProducts[index].productId}
-								type="single"
-								name={`taskProducts[${index}].productId`}
-								required
-							>
-								<Select.Trigger class="w-full">
-									{products.find((p) => p.id.toString() === $formData.taskProducts[index].productId)
-										?.title || 'Izvēlēties'}
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value="">Izvēlēties</Select.Item>
-									{#each products as product}
-										<Select.Item value={product.id.toString()}>{product.title}</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
-							<NumberInput bind:value={$formData.taskProducts[index].count} />
-							{#if $formData.taskProducts.length > 1}
-								<Button
-									type="button"
-									variant="outline"
-									onclick={() => removeEntry(index)}
-									title="Remove product"
+							<Form.Label>Produkti</Form.Label>
+							<Popover.Root>
+								<Popover.Trigger
+									class={cn(
+										buttonVariants({ variant: 'outline' }),
+										'w-full justify-between',
+										(!entry.productId || entry.productId === 0) && 'text-muted-foreground'
+									)}
+									role="combobox"
+									onclick={() => {
+										touchedProducts.add(index);
+										touchedProducts = new Set(touchedProducts);
+									}}
 								>
-									close
-								</Button>
-							{/if}
+									{entry.productId === 0
+										? 'Izvēlies produktu'
+										: (options.find((f) => f.value === entry.productId)?.label ??
+											'Izvēlies produktu')}
+									<ChevronsUpDownIcon class="opacity-50" />
+								</Popover.Trigger>
+								<input hidden value={entry.productId} name={props.name} />
+								<Popover.Content class="w-[300px] p-0">
+									<Command.Root>
+										<Command.Input autofocus placeholder="Meklēt produktus..." class="h-9" />
+										<Command.Empty>Šāds produkts netika atrasts!</Command.Empty>
+										<Command.Group>
+											{#each options as product (product.value)}
+												<Command.Item
+													value={product.label}
+													onSelect={() => {
+														$formData.taskProducts[index].productId = Number(product.value);
+														touchedProducts.add(index);
+														touchedProducts = new Set(touchedProducts);
+													}}
+												>
+													{product.label}
+													<CheckIcon
+														class={cn(
+															'ml-auto',
+															product.value !== entry.productId && 'text-transparent'
+														)}
+													/>
+												</Command.Item>
+											{/each}
+										</Command.Group>
+									</Command.Root>
+								</Popover.Content>
+							</Popover.Root>
 						{/snippet}
 					</Form.Control>
-				</Form.ElementField>
-			{/each}
-		</Form.Fieldset>
-	</div>
-	<!-- Total Price (read-only) -->
-	<div class="mt-4">
-		<Label for="price">Kopējā cena (€)</Label>
-		<div class="relative flex items-center">
-			<Input
-				id="price"
-				type="number"
-				value={Number(formatPriceForDisplay($formData.price || 0))}
-				step="0.01"
-				readonly
-			/>
-			<span class="text-muted-foreground absolute right-3">€</span>
-			<!-- Hidden input for SuperForm to bind the price value in cents -->
-			<input type="hidden" name="price" bind:value={$formData.price} />
-		</div>
-	</div>
+					{#if touchedProducts.has(index)}
+						<Form.FieldErrors />
+					{/if}
+				</Form.Field>
+
+				<Form.Field {form} name={`taskProducts[${index}].count`} class="flex flex-col">
+					<Form.Control>
+						{#snippet children({ props })}
+							<Form.Label>Skaits</Form.Label>
+							<NumberInput bind:value={$formData.taskProducts[index].count} {...props} />
+						{/snippet}
+					</Form.Control>
+					<Form.FieldErrors />
+				</Form.Field>
+
+				{#if $formData.taskProducts.length > 1}
+					<Button
+						type="button"
+						variant="outline"
+						size="icon"
+						onclick={() => removeEntry(index)}
+						title="Noņemt produktu"
+						class="mb-2"
+					>
+						<X class="h-4 w-4" />
+					</Button>
+				{/if}
+			</div>
+		{/each}
+	</Form.Fieldset>
+</div>
+<!-- Total Price (read-only) -->
+<div class="mt-4 flex items-center gap-2">
+	<Label for="price">Kopējā cena (€)</Label>
+
+	€{formatPrice(totalPrice)}
+
+	<Button variant="ghost" onclick={addEntry}>+ Pievienot produktu</Button>
 </div>
