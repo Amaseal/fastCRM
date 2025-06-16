@@ -60,7 +60,7 @@
 				<Sidebar.MenuButton class=" data-[slot=sidebar-menu-button]:!p-1.5">
 					{#snippet child({ props })}
 						<a href="/" {...props} class="flex items-end gap-2">
-							<img src="./logo.svg" class="h-8 object-contain" alt="" />
+							<img src="logo.svg" class="h-8 object-contain" alt="" />
 							<span class="text-base font-semibold">Fastbreak CRM</span>
 						</a>
 					{/snippet}

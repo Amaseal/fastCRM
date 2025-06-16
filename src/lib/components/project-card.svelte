@@ -75,16 +75,14 @@
 		}
 	}}
 >
-	<Card.Root class="cursor-grab bg-zinc-900 p-1">
-		<Card.Header class="flex justify-between p-2">
-			<div class="flex items-center justify-between">
-				<Card.Title class="flex items-center gap-2 text-base">
-					{#if isWorkFeasible(task.endDate, task.count)}
-						<TriangleAlert />
-					{/if}{task.title}</Card.Title
-				>
-				<Card.Description>{toCurrency(task.price)} &#8364</Card.Description>
-			</div>
+	<Card.Root class="cursor-grab gap-0 p-1">
+		<Card.Header class="flex items-center justify-between p-2">
+			<Card.Title class="flex items-center  gap-2 text-base">
+				{#if isWorkFeasible(task.endDate, task.count)}
+					<TriangleAlert />
+				{/if}{task.title}</Card.Title
+			>
+			<Card.Description>{toCurrency(task.price)} &#8364</Card.Description>
 		</Card.Header>
 		<Card.Content class="p-1">
 			{#if task.client}
@@ -144,7 +142,7 @@
 			{/if}
 			<div class="flex justify-between gap-2">
 				<Button
-					onclick={() => (editOpen = true)}
+					href={`/projekti/labot/${task.id}`}
 					variant="outline"
 					class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
 				>

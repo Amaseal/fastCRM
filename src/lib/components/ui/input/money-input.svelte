@@ -2,7 +2,7 @@
 	import Input from './input.svelte';
 
 	let {
-		value = $bindable(0),
+		value = $bindable(),
 		currency = 'EUR',
 		locale = 'lv-LV',
 		name = '',
@@ -11,8 +11,6 @@
 		disabled = false,
 		className = ''
 	} = $props();
-
-	$inspect(value);
 
 	let rawValue = $state('');
 	let inputValue = $state('');

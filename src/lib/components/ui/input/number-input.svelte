@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
+	import { onMount } from 'svelte';
 
 	let {
-		value = $bindable(0),
-		min = 1,
+		value = $bindable(),
+		min = 0,
 		step = 1,
 		class: className = ''
 		// ...restProps

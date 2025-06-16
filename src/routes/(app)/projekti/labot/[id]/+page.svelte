@@ -3,7 +3,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { taskSchema, type TaskSchema } from '../schema';
+	import { taskSchema, type TaskSchema } from '../../schema';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import X from '@lucide/svelte/icons/x';
@@ -23,11 +23,11 @@
 	import NumberInput from '$lib/components/ui/input/number-input.svelte';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { page } from '$app/state';
-	import type { Client, Material, Product, User } from '$lib/server/db/schema';
-	import ClientSelect from '../client-select.svelte';
-	import MultiSelectCombobox from '../multi-select-combobox.svelte';
-	import TaskFiles from '../task-files.svelte';
-	import ProductSelect from '../product-select.svelte';
+	import type { Client, Material, Product, Task, User } from '$lib/server/db/schema';
+	import ClientSelect from '../../client-select.svelte';
+	import MultiSelectCombobox from '../../multi-select-combobox.svelte';
+	import TaskFiles from '../../task-files.svelte';
+	import ProductSelect from '../../product-select.svelte';
 	import MoneyInput from '$lib/components/ui/input/money-input.svelte';
 	import Dropzone from '$lib/components/dropzone.svelte';
 
@@ -41,9 +41,15 @@
 			tabId: number;
 			materials: Material[];
 			products: Product[];
+			item: Task;
 		};
 	} = $props();
-	const form = superForm(data.form, {
+
+	$inspect(data.item);
+
+	// Transform database item to form-compatible data
+
+	const form = superForm(data.item, {
 		dataType: 'json',
 		validators: zodClient(taskSchema),
 		onError: ({ result }) => {
@@ -180,7 +186,7 @@
 											<Select.Root
 												type="single"
 												name={props.name}
-												bind:value={$formData.responsiblePersonId}
+												bind:value={$formData.responsiblePersonId as string}
 											>
 												<Select.Trigger class="w-full">
 													{selectResponsible}
@@ -202,7 +208,7 @@
 											<Select.Root
 												type="single"
 												name={props.name}
-												bind:value={$formData.seamstress}
+												bind:value={$formData.seamstress as string}
 											>
 												<Select.Trigger class="w-full">
 													{$formData.seamstress ? $formData.seamstress : 'Izvēlies šuvēju'}
@@ -221,7 +227,7 @@
 									<Form.Control>
 										{#snippet children({ props })}
 											<Form.Label>Cena</Form.Label>
-											<MoneyInput {...props} bind:value={$formData.price} />
+											<MoneyInput {...props} bind:value={$formData.price as number} />
 										{/snippet}
 									</Form.Control>
 									<Form.FieldErrors />
@@ -237,7 +243,7 @@
 
 							<div>
 								<label for="files">Faili:</label>
-								<TaskFiles {form} />
+								<TaskFiles {form} existingFiles={data.item.files} />
 							</div>
 							<div class="w-full">
 								<ProductSelect products={data.products} {form} />
@@ -246,14 +252,14 @@
 
 						<div class="w-1/2">
 							<label for="/">Apraksts</label>
-							<Edra bind:value={$formData.description} name="description" />
+							<Edra bind:value={$formData.description as string} name="description" />
 						</div>
 					</div>
 					<Form.Field {form} name="preview">
 						<Form.Control>
 							{#snippet children({ props })}
 								<Form.Label>Cena</Form.Label>
-								<Dropzone bind:value={$formData.preview} {...props} name="preview" />
+								<Dropzone bind:value={$formData.preview as string} {...props} name="preview" />
 							{/snippet}
 						</Form.Control>
 						<Form.FieldErrors />

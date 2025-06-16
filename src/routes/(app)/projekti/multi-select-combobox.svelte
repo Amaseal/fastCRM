@@ -18,6 +18,7 @@
 		remaining?: number;
 	}
 	const triggerId = useId();
+
 	let {
 		value = $bindable(),
 		materials = [],
@@ -30,7 +31,16 @@
 
 	let formData = form.form;
 	let open = $state(false);
+
 	let selectedMaterials = $state([]) as string[];
+	// $effect(() => {
+	// 	// Initialize selected materials from form data
+	// 	if ($formData.materialIds) {
+	// 		selectedMaterials = $formData.materialIds.map((id: number) => String(id));
+	// 	}
+	// });
+
+	$inspect($formData.materialIds, 'Selected Material IDs');
 
 	const options = materials.map(({ id, title, remaining }: Material) => ({
 		value: String(id), // Keep as string for the component, but convert back to number when submitting

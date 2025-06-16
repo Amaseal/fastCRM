@@ -2,20 +2,28 @@ import { db } from '$lib/server/db';
 import { taskSchema } from '../schema';
 import { fail, superValidate, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { client, material, product, task, taskMaterial, taskProduct, file } from '$lib/server/db/schema';
+import {
+	client,
+	material,
+	product,
+	task,
+	taskMaterial,
+	taskProduct,
+	file
+} from '$lib/server/db/schema';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { redirect } from '@sveltejs/kit';
 import { asc, inArray } from 'drizzle-orm';
 
 export const load = async ({ url }) => {
 	const tabId = url.searchParams.get('tabId');
-	
+
 	// If tabId is provided, set it as default in the form
 	const form = await superValidate(zod(taskSchema));
 	if (tabId) {
 		form.data.tabId = Number(tabId);
 	}
-	
+
 	const materials = await db.query.material.findMany({
 		orderBy: [asc(material.title)]
 	});
@@ -118,7 +126,7 @@ export const actions = {
 					managerId: currentUser.id,
 					endDate: endDate || null,
 					preview: preview || null,
-					seamstress: seamstress || null,
+					seamstress: seamstress || null
 				})
 				.returning({ id: task.id });
 
@@ -151,17 +159,15 @@ export const actions = {
 
 			// Associate files with the new task by updating the taskId in the files table
 			if (files && files.length > 0) {
-				await db
-					.update(file)
-					.set({ taskId: newTask.id })
-					.where(inArray(file.id, files));
-			}
-
-			// Return success message
+				await db.update(file).set({ taskId: newTask.id }).where(inArray(file.id, files));
+			} // Return success message
 			setFlash({ type: 'success', message: 'Projekts veiksmīgi izveidots!' }, cookies);
-			redirect(303, '/projekti');
 		} catch (error) {
 			console.error('Error saving task:', error);
-			return fail(500, { form, message: 'Internal server error' });		}
+			return fail(500, { form, message: 'Internal server error' });
+		}
+
+		// Redirect after successful completion (outside try/catch)
+		redirect(303, '/projekti');
 	}
 };
