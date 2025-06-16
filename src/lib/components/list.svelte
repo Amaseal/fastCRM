@@ -11,7 +11,6 @@
 	import { CSS, styleObjectToString } from '@dnd-kit-svelte/utilities';
 	import { SortableContext } from '@dnd-kit-svelte/sortable';
 	import { useDroppable } from '@dnd-kit-svelte/core';
-
 	let { tab, isDragOverlay = false } = $props();
 
 	// Make the tab sortable (for reordering lists)
@@ -25,13 +24,13 @@
 		isDragging: tabIsDragging,
 		isSorting: tabIsSorting
 	} = useSortable({
-		id: tab.id.toString(),
+		id: tab?.id?.toString() || 'unknown',
 		data: { type: 'tab' }
 	});
 
 	// Make the card content area droppable (for accepting tasks)
 	const { node: droppableNode, isOver } = useDroppable({
-		id: tab.id.toString(),
+		id: tab?.id?.toString() || 'unknown',
 		data: { type: 'tab-content', accepts: ['task'] }
 	});
 	const tabStyle = $derived(
@@ -51,12 +50,13 @@
 		>
 			<Card.Header class="justify-streatch flex flex-col gap-2 p-1">
 				<div class="flex w-full items-center gap-2">
-					<Button variant="ghost" href="/projekti/saraksti/labot/{tab.id}">
-						<Card.Title class="text-base">{tab.title}</Card.Title>
+					<Button variant="ghost" href="/projekti/saraksti/labot/{tab?.id || ''}">
+						<Card.Title class="text-base">{tab?.title || 'Unknown'}</Card.Title>
 					</Button>
-
 					<Card.Description
-						>{toCurrency(tab.tasks.reduce((sum: number, task: Task) => sum + (task.price || 0), 0))}
+						>{toCurrency(
+							(tab?.tasks || []).reduce((sum: number, task: Task) => sum + (task.price || 0), 0)
+						)}
 						&#8364</Card.Description
 					>
 					<div class="ml-auto">
@@ -71,9 +71,9 @@
 						</div>
 					</div>
 				</div>
-				<hr class=" w-full border-2" style="border-color: {tab.color}" />
+				<hr class=" w-full border-2" style="border-color: {tab?.color || '#ffffff'}" />
 
-				<Button variant="ghost" class="w-full" href="/projekti/pievienot?tabId={tab.id}"
+				<Button variant="ghost" class="w-full" href="/projekti/pievienot?tabId={tab?.id || ''}"
 					><Plus size="14"></Plus></Button
 				>
 			</Card.Header>
@@ -84,16 +84,16 @@
 						: ''}"
 					bind:this={droppableNode.current}
 				>
-					<SortableContext items={tab.tasks.map((task: Task) => task.id.toString())}>
-						{#if tab.tasks.length === 0}
+					<SortableContext items={tab?.tasks?.map((task: Task) => task.id.toString()) || []}>
+						{#if !tab?.tasks || tab.tasks.length === 0}
 							<div
 								class="flex h-full w-full items-center justify-center text-gray-500 dark:text-gray-400"
 							>
 								No tasks
 							</div>
 						{:else}
-							{#each tab.tasks as task (task.id)}
-								<ProjectCard {task} container={tab.id.toString()} />
+							{#each tab?.tasks || [] as task (task.id)}
+								<ProjectCard {task} container={tab?.id?.toString() || ''} />
 							{/each}
 						{/if}
 					</SortableContext>
@@ -106,7 +106,7 @@
 		<div
 			class="absolute inset-0 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-100 dark:bg-zinc-800"
 		>
-			<span class="text-zin-200">Pārvieto: {tab.title}</span>
+			<span class="text-zin-200">Pārvieto: {tab?.title || 'Unknown'}</span>
 		</div>
 	{/if}
 </div>

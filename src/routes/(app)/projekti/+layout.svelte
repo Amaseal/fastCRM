@@ -19,7 +19,6 @@
 	} from '@dnd-kit-svelte/core';
 	import { SortableContext, arrayMove } from '@dnd-kit-svelte/sortable';
 	import ProjectCard from '$lib/components/project-card.svelte';
-
 	let { data, children } = $props();
 	let tabs = $state(data.tabs);
 
@@ -61,7 +60,7 @@
 		});
 	}
 	function findTabContainingTask(taskId: string) {
-		return tabs.find((tab) => tab.tasks.some((task) => task.id === Number(taskId)));
+		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(taskId)));
 	}
 	function handleDragStart({ active }: DragStartEvent) {
 		activeType = active.data?.type as 'tab' | 'task';
@@ -70,7 +69,7 @@
 			activeItem = tabs.find((tab) => tab.id === Number(active.id));
 		} else if (activeType === 'task') {
 			const containingTab = findTabContainingTask(active.id as string);
-			activeItem = containingTab?.tasks.find((task) => task.id === Number(active.id));
+			activeItem = containingTab?.tasks?.find((task) => task.id === Number(active.id));
 		}
 
 		// Immediately disable scroll and keep it disabled for the entire drag operation
@@ -89,15 +88,17 @@
 		const overId = over.id as string;
 		const activeDataType = active.data?.type as 'tab' | 'task';
 		const overDataType = over.data?.type as 'tab' | 'task' | 'tab-content';
-
 		if (activeDataType === 'tab' && (overDataType === 'tab' || overDataType === 'tab-content')) {
 			// Handle tab reordering
 			const oldIndex = tabs.findIndex((tab) => tab.id === Number(activeId));
 			const newIndex = tabs.findIndex((tab) => tab.id === Number(overId));
-
 			if (oldIndex !== newIndex) {
 				// Optimistically update the UI first for immediate feedback
-				tabs = arrayMove(tabs, oldIndex, newIndex);
+				// Create a new array instead of using arrayMove to avoid state proxy issues
+				const newTabs = [...tabs];
+				const [movedTab] = newTabs.splice(oldIndex, 1);
+				newTabs.splice(newIndex, 0, movedTab);
+				tabs = newTabs;
 
 				const formData = new FormData();
 				formData.append('draggedTab', JSON.stringify(tabs[newIndex]));
@@ -112,15 +113,22 @@
 						}
 					});
 					if (response.ok) {
-						// Only invalidate if we want to sync with server, but UI is already updated
-						// invalidateAll();					} else {
+						// Invalidate to sync with server data - this is crucial for tab reordering
+						await invalidateAll();
+					} else {
 						// Revert the optimistic update if server request failed
-						tabs = arrayMove(tabs, newIndex, oldIndex);
+						const revertTabs = [...tabs];
+						const [movedTab] = revertTabs.splice(newIndex, 1);
+						revertTabs.splice(oldIndex, 0, movedTab);
+						tabs = revertTabs;
 					}
 				} catch (error) {
 					console.error('Tab reorder failed:', error);
 					// Revert the optimistic update
-					tabs = arrayMove(tabs, newIndex, oldIndex);
+					const revertTabs = [...tabs];
+					const [movedTab] = revertTabs.splice(newIndex, 1);
+					revertTabs.splice(oldIndex, 0, movedTab);
+					tabs = revertTabs;
 				} finally {
 					// Re-enable scroll immediately - horizontal scroll will ignore events for a grace period
 					$disableScroll = false;
@@ -133,16 +141,15 @@
 			// Handle task movement between tabs
 			const sourceTab = findTabContainingTask(activeId);
 			const targetTabId = Number(overId);
-
 			if (sourceTab && sourceTab.id !== targetTabId) {
-				const task = sourceTab.tasks.find((t) => t.id === Number(activeId));
+				const task = sourceTab.tasks?.find((t) => t.id === Number(activeId));
 
 				if (task) {
 					// Optimistically update the UI first
-					sourceTab.tasks = sourceTab.tasks.filter((t) => t.id !== task.id);
+					sourceTab.tasks = (sourceTab.tasks || []).filter((t) => t.id !== task.id);
 					const targetTab = tabs.find((t) => t.id === targetTabId);
 					if (targetTab) {
-						targetTab.tasks = [...targetTab.tasks, task];
+						targetTab.tasks = [...(targetTab.tasks || []), task];
 					}
 					tabs = [...tabs]; // Trigger reactivity
 
@@ -159,21 +166,20 @@
 								'x-sveltekit-action': 'true'
 							}
 						});
-
 						if (!response.ok) {
 							// Revert the optimistic update if server request failed
 							if (targetTab) {
-								targetTab.tasks = targetTab.tasks.filter((t) => t.id !== task.id);
+								targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 							}
-							sourceTab.tasks = [...sourceTab.tasks, task];
+							sourceTab.tasks = [...(sourceTab.tasks || []), task];
 							tabs = [...tabs];
 						}
 					} catch (error) {
 						console.error('Task move failed:', error); // Revert the optimistic update
 						if (targetTab) {
-							targetTab.tasks = targetTab.tasks.filter((t) => t.id !== task.id);
+							targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 						}
-						sourceTab.tasks = [...sourceTab.tasks, task];
+						sourceTab.tasks = [...(sourceTab.tasks || []), task];
 						tabs = [...tabs];
 					} finally {
 						// Re-enable scroll immediately - horizontal scroll will ignore events for a grace period
