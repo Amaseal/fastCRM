@@ -251,6 +251,7 @@
 </script>
 
 <!-- File Drop Zone -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	class="mb-3 block w-full cursor-pointer rounded-lg border-2 border-dashed transition-colors duration-200
 		{dragActive ? 'border-violet-500 bg-violet-950/20' : 'bg-input/30 border-neutral-600'} 
