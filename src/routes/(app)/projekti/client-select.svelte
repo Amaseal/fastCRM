@@ -77,7 +77,7 @@
 							variant="ghost"
 							onclick={() => {
 								showAddForm = true;
-								$formData.clientId = '';
+								$formData.clientId = null;
 								$formData.newClientType = 'BTC';
 							}}>Pievienot</Button
 						>

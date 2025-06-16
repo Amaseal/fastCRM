@@ -51,7 +51,7 @@ export const actions = {
 	default: async ({ request, cookies, locals }) => {
 		// Validate the form data with superforms
 		const form = await superValidate(request, zod(taskSchema));
-
+console.log(form.valid)
 		// If form validation fails, return the form with errors
 		if (!form.valid) {
 			return fail(400, { form });

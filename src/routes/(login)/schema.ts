@@ -14,7 +14,7 @@ export const userSchema = z.object({
 			invalid_type_error: 'Nepieciešama derīga epasta adrese'
 		})
 		.email({ message: 'Nederīga e-pasta adrese' }),
-	name: z.string({required_error: 'Vārds ir obligāts un tiks attelots kā lietotājvārds'}).min(1, { message: 'Vārdam jābūt garākam kā 1 burts' }),
+	name: z.string({required_error: 'Vārds ir obligāts un tiks attelots kā lietotājvārds'}).min(1, { message: 'Vārdam jābūt garākam kā 1 burts' }).optional(),
 })
 
 export type UserSchema = typeof userSchema;

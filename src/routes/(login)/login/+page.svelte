@@ -48,7 +48,7 @@
 					<Form.FieldErrors />
 				</Form.Field>
 				<div class="flex items-center gap-2">
-					<Form.Button disabled={!form}>Pieslēgties</Form.Button>
+					<Button type="submit">Pieslēgties</Button>
 					<span class="ml-auto">vai</span>
 					<Button href="/register" variant="ghost">Reģistrēties</Button>
 				</div>

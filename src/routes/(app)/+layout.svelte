@@ -8,7 +8,7 @@
 	import CheckCircle2Icon from '@lucide/svelte/icons/check-circle-2';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 
-	const flash = getFlash(page, { clearAfterMs: 5000 });
+	const flash = getFlash(page, { clearAfterMs: 2000 });
 
 	let { children } = $props();
 </script>

@@ -19,18 +19,18 @@ export const taskSchema = z
 		description: z
 			.string()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined), // Handle null from DB
+			.optional(),
+
 		tabId: z
 			.number()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		clientId: z
 			.number()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		// Separate fields for new client information instead of nested object
 		newClientName: z.string().optional(),
 		newClientEmail: z.string().email().optional(),
@@ -40,29 +40,29 @@ export const taskSchema = z
 		managerId: z
 			.string()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		responsiblePersonId: z
 			.string()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		count: z
 			.number()
 			.nullable()
 			.optional()
-			.transform((val) => val ?? 1)
-			.pipe(z.number().min(1, { message: 'Skaitam jābūt vismaz 1' })),
+			.transform((val) => val ?? 1),
+
 		endDate: z
 			.string()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		isPrinted: z
 			.boolean()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? false),
+			.optional(),
+
 		files: z.array(z.number()).optional().default([]),
 		price: z
 			.number()
@@ -73,8 +73,8 @@ export const taskSchema = z
 		seamstress: z
 			.string()
 			.nullable()
-			.optional()
-			.transform((val) => val ?? undefined),
+			.optional(),
+
 		materialIds: z.array(z.coerce.number()).optional().default([]), // Auto-convert strings to numbers
 		preview: z
 			.string()
@@ -83,8 +83,6 @@ export const taskSchema = z
 			.transform((val) => val ?? undefined),
 		// Support multiple products
 		taskProducts: z.array(taskProductSchema).optional().default([]),
-		createdAt: z.string().optional(),
-		updatedAt: z.string().optional()
 	})
 	.superRefine((data, ctx) => {
 		// Validation for new client fields - if name is provided, then either email or phone is required

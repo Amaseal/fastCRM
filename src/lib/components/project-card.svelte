@@ -9,47 +9,158 @@
 	import Handshake from '@lucide/svelte/icons/handshake';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
 	import { disableScroll } from '$lib/stores';
-
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import { Trash2 } from '@lucide/svelte';
+	import PrintProject from './print-project.svelte';
 
 	let { task, container } = $props();
-
 	let printableRef: HTMLDivElement;
+	const printComponent = (): void => {
+		if (!printableRef) return;
 
-	// 	const printComponent = (): void => {
-	// 		if (!printableRef) return;
+		const printContents: string = printableRef.innerHTML;
 
-	// 		const printContents: string = printableRef.innerHTML;
+		// Create a hidden iframe for printing
+		const iframe = document.createElement('iframe');
+		iframe.style.position = 'absolute';
+		iframe.style.left = '-9999px';
+		iframe.style.top = '-9999px';
+		iframe.style.width = '0px';
+		iframe.style.height = '0px';
+		iframe.style.border = 'none';
 
-	// 		const printWindow = window.open('', '', 'width=800,height=600');
-	// 		if (!printWindow) return;
+		document.body.appendChild(iframe);
 
-	// 		printWindow.document.write(`
-	// 	<html>
-	// 	  <head>
-	// 		<title>Print View</title>
-	// 		<style>
-	// 		  body {
-	// 			font-family: sans-serif;
-	// 			padding: 2rem;
-	// 		  }
-	// 		</style>
-	// 	  </head>
-	// 	  <body>
-	// 		${printContents}
-	// 	  </body>
-	// 	</html>
-	//   `);
-	// 		printWindow.document.close();
-	// 		printWindow.focus();
-	// 		printWindow.print();
-	// 		printWindow.close();
-	// 	};
+		const iframeDoc = iframe.contentWindow?.document;
+		if (!iframeDoc) return;
 
-	let editOpen = $state(false);
+		// Create the print styles
+		const styles = `
+			body {
+				font-family: Arial, sans-serif;
+				padding: 1rem;
+				margin: 0;
+				background: white !important;
+				color: black !important;
+				line-height: 1.6;
+			}
+			* {
+				color: black !important;
+				background-color: transparent !important;
+				box-sizing: border-box;
+			}
+			.print-container {
+				font-family: Arial, sans-serif !important;
+				color: #000 !important;
+				background: #fff !important;
+				max-width: none !important;
+				width: 100% !important;
+			}
+			.mx-auto { margin-left: auto; margin-right: auto; }
+			.max-w-5xl { max-width: 64rem; }
+			.mb-1 { margin-bottom: 0.25rem; }
+			.mb-2 { margin-bottom: 0.5rem; }
+			.mt-4 { margin-top: 1rem; }
+			.pb-2 { padding-bottom: 0.5rem; }
+			.pt-2 { padding-top: 0.5rem; }
+			.p-3 { padding: 0.75rem; }
+			.p-4 { padding: 1rem; }
+			.gap-2 { gap: 0.5rem; }
+			.space-y-1 > * + * { margin-top: 0.25rem; }
+			.border-b-2 { border-bottom-width: 2px; }
+			.border-t-2 { border-top-width: 2px; }
+			.border-b { border-bottom-width: 1px; }
+			.border { border-width: 1px; }
+			.border-gray-200 { border-color: #e5e7eb !important; }
+			.bg-white { background-color: #ffffff !important; }
+			.bg-gray-50 { background-color: #f9fafb !important; }
+			.text-2xl { font-size: 1.5rem; line-height: 2rem; }
+			.text-base { font-size: 1rem; line-height: 1.5rem; }
+			.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+			.font-bold { font-weight: 700; }
+			.font-medium { font-weight: 500; }
+			.italic { font-style: italic; }
+			.text-black { color: #000000 !important; }
+			.text-gray-900 { color: #111827 !important; }
+			.text-gray-700 { color: #374151 !important; }
+			.text-gray-600 { color: #4b5563 !important; }
+			.text-gray-800 { color: #1f2937 !important; }
+			.text-gray-500 { color: #6b7280 !important; }
+			.flex { display: flex; }
+			.block { display: block; }
+			.grid { display: grid; }
+			.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+			.w-1\\/2 { width: 50%; }
+			.h-auto { height: auto; }
+			.max-w-full { max-width: 100%; }
+			.min-h-64 { min-height: 16rem; }
+			.justify-between { justify-content: space-between; }
+			.rounded-md { border-radius: 0.375rem; }
+			.rounded { border-radius: 0.25rem; }
+			.last\\:border-b-0:last-child { border-bottom-width: 0; }
+			.field-container {
+				margin-bottom: 0.75rem !important;
+				padding-bottom: 0.375rem !important;
+			}
+			.field-label {
+				margin-bottom: 0.25rem !important;
+				font-weight: 600 !important;
+				color: #374151 !important;
+			}
+			.field-value {
+				padding-bottom: 0.25rem !important;
+				border-bottom: 1px solid #e5e7eb !important;
+				margin-bottom: 0.375rem !important;
+			}
+			@media print {
+				body { margin: 0; padding: 1rem; }
+				.print-container { padding: 0; }
+				.field-container { 
+					margin-bottom: 0.5rem !important;
+					break-inside: avoid;
+				}
+			}
+			img {
+				max-width: 100% !important;
+				height: auto !important;
+				display: block;
+				margin: 0 auto;
+			}
+		`;
+
+		// Write the content to the iframe
+		iframeDoc.open();
+		iframeDoc.write(`
+			<!DOCTYPE html>
+			<html lang="lv">
+			<head>
+				<title>Projekta Izdruka - ${task.title || 'Projekts'}</title>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<style>${styles}</style>
+			</head>
+			<body>
+				${printContents}
+			</body>
+			</html>
+		`);
+		iframeDoc.close();
+
+		// Wait for the iframe to load, then print
+		iframe.onload = () => {
+			setTimeout(() => {
+				iframe.contentWindow?.print();
+
+				// Clean up after printing
+				setTimeout(() => {
+					document.body.removeChild(iframe);
+				}, 1000);
+			}, 100);
+		};
+	};
 
 	function preventParentDrag(event: { stopPropagation: () => void }) {
 		// Stop propagation to prevent triggering parent scroll drag
@@ -148,34 +259,29 @@
 				>
 					<Pencil size={16} />
 				</Button>
-
-				<!-- <Button
+				<Button
 					onclick={printComponent}
 					variant="outline"
-					class="interactive flex items-center rounded-lg border  p-3  hover:border-purple-500 hover:text-purple-400"
+					class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
 				>
 					<Printer size={16} />
-				</Button> -->
-
-				<!-- <MoveToDone data={task} />
-				<DeleteTask data={task} /> -->
+				</Button>
+				<Button
+					href={`/projekti/izdzest/${task.id}`}
+					variant="outline"
+					class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
+				>
+					<Trash2 size={16} />
+				</Button>
 			</div>
 		</Card.Content>
 	</Card.Root>
 </div>
 
-<!-- <div bind:this={printableRef} style="display: none;">
-	<Print />
-</div> -->
+<div bind:this={printableRef} style="display: none;">
+	<PrintProject {task} />
+</div>
 
 <style>
-	.missed {
-		border-bottom: 2px solid red;
-	}
-	.two-days {
-		border-bottom: 2px solid orange;
-	}
-	.tomorrow {
-		border-bottom: 2px solid orangered;
-	}
+	/* Unused styles removed - they were for date-based styling that's not currently used */
 </style>

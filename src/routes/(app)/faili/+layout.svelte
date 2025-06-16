@@ -260,7 +260,7 @@
 						<Table.Cell>
 							{#if file.task}
 								<a
-									href="/projekti/{file.task.id}"
+									href="/projekti/labot/{file.task.id}"
 									class="text-blue-600 underline hover:text-blue-800"
 								>
 									{file.task.title}

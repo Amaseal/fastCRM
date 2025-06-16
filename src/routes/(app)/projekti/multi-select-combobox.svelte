@@ -33,12 +33,12 @@
 	let open = $state(false);
 
 	let selectedMaterials = $state([]) as string[];
-	// $effect(() => {
-	// 	// Initialize selected materials from form data
-	// 	if ($formData.materialIds) {
-	// 		selectedMaterials = $formData.materialIds.map((id: number) => String(id));
-	// 	}
-	// });
+	$effect(() => {
+		// Initialize selected materials from form data
+		if ($formData.materialIds) {
+			selectedMaterials = $formData.materialIds.map((id: number) => String(id));
+		}
+	});
 
 	$inspect($formData.materialIds, 'Selected Material IDs');
 
@@ -47,19 +47,19 @@
 		label: title,
 		remaining: remaining
 	}));
-
 	function toggleMaterial(id: string) {
 		if (selectedMaterials.includes(id)) {
 			selectedMaterials = selectedMaterials.filter((cid) => cid !== id);
 		} else {
 			selectedMaterials = [...selectedMaterials, id];
 		}
-		$formData.materialIds = selectedMaterials; // keep form data in sync
+		// Convert strings back to numbers for form data
+		$formData.materialIds = selectedMaterials.map((id) => Number(id));
 	}
 </script>
 
 <div class="relative">
-	<Form.Field {form} name="clientId" class="flex w-full flex-col">
+	<Form.Field {form} name="materialIds" class="flex w-full flex-col">
 		<Popover.Root bind:open>
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
@@ -97,9 +97,9 @@
 							Izvēlēties audumu...
 						{/if}
 						<ChevronsUpDownIcon class="opacity-50" />
-					</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
+					</Popover.Trigger>
 					{#each selectedMaterials as id}
-						<input type="hidden" name={props.name} value={id} />
+						<input type="hidden" name="materialIds" value={Number(id)} />
 					{/each}
 				{/snippet}
 			</Form.Control>
@@ -131,5 +131,6 @@
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
+		<Form.FieldErrors />
 	</Form.Field>
 </div>

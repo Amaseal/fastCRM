@@ -54,7 +54,10 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, form: errors, form: allErrors, enhance } = form;
+
+	$inspect('Form Data:', $formData);
+	$inspect(form);
 	const currentUser = $derived(page.data.user);
 	const df = new DateFormatter('lv-LV', {
 		dateStyle: 'long'
@@ -180,7 +183,7 @@
 											<Select.Root
 												type="single"
 												name={props.name}
-												bind:value={$formData.responsiblePersonId}
+												bind:value={$formData.responsiblePersonId as string}
 											>
 												<Select.Trigger class="w-full">
 													{selectResponsible}
@@ -202,7 +205,7 @@
 											<Select.Root
 												type="single"
 												name={props.name}
-												bind:value={$formData.seamstress}
+												bind:value={$formData.seamstress as string}
 											>
 												<Select.Trigger class="w-full">
 													{$formData.seamstress ? $formData.seamstress : 'Izvēlies šuvēju'}
@@ -246,7 +249,7 @@
 
 						<div class="w-1/2">
 							<label for="/">Apraksts</label>
-							<Edra bind:value={$formData.description} name="description" />
+							<Edra bind:value={$formData.description as string} name="description" />
 						</div>
 					</div>
 					<Form.Field {form} name="preview">
@@ -272,5 +275,7 @@
 	<div class="w-80 bg-gray-100 p-4 text-xs dark:bg-gray-800">
 		<h3 class="mb-2 font-bold">Form Data:</h3>
 		<pre class="whitespace-pre-wrap">{JSON.stringify($formData, null, 2)}</pre>
+		<pre>All errors: {JSON.stringify($allErrors, null, 2)}</pre>
+		<pre>Errors: {JSON.stringify($errors, null, 2)}</pre>
 	</div>
 </div>
