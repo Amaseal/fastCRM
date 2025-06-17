@@ -45,8 +45,6 @@
 		};
 	} = $props();
 
-	$inspect(data.item);
-
 	// Transform database item to form-compatible data
 
 	const form = superForm(data.item, {
@@ -274,9 +272,5 @@
 				</form>
 			</Card.Content>
 		</Card.Root>
-	</div>
-	<div class="w-80 bg-gray-100 p-4 text-xs dark:bg-gray-800">
-		<h3 class="mb-2 font-bold">Form Data:</h3>
-		<pre class="whitespace-pre-wrap">{JSON.stringify($formData, null, 2)}</pre>
 	</div>
 </div>

@@ -28,9 +28,8 @@
 		materials?: Material[];
 		form: SuperForm<z.infer<typeof taskSchema>>;
 	}>();
-
 	let formData = form.form;
-	let open = $state(false);
+	let popoverOpen = $state(false);
 
 	let selectedMaterials = $state([]) as string[];
 	$effect(() => {
@@ -39,8 +38,6 @@
 			selectedMaterials = $formData.materialIds.map((id: number) => String(id));
 		}
 	});
-
-	$inspect($formData.materialIds, 'Selected Material IDs');
 
 	const options = materials.map(({ id, title, remaining }: Material) => ({
 		value: String(id), // Keep as string for the component, but convert back to number when submitting
@@ -55,12 +52,14 @@
 		}
 		// Convert strings back to numbers for form data
 		$formData.materialIds = selectedMaterials.map((id) => Number(id));
+		// Close popover after selection
+		popoverOpen = false;
 	}
 </script>
 
 <div class="relative">
 	<Form.Field {form} name="materialIds" class="flex w-full flex-col">
-		<Popover.Root bind:open>
+		<Popover.Root bind:open={popoverOpen}>
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
 					<Form.Label>Audumi</Form.Label>
@@ -83,7 +82,7 @@
 											type="button"
 											class="hover:text-primary ml-1 cursor-pointer text-xl text-gray-500 focus:outline-none"
 											onclick={(e) => {
-												e.stopPropagation();
+												e.stopPropagation(); // Prevent popover from closing
 												toggleMaterial(opt.value);
 											}}
 											aria-label="Noņemt"

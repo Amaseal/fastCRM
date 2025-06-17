@@ -14,7 +14,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import { Trash2 } from '@lucide/svelte';
+	import { Check, Trash2 } from '@lucide/svelte';
 	import PrintProject from './print-project.svelte';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 
@@ -185,16 +185,6 @@
 			}, 100);
 		};
 	};
-	function preventParentDrag(event: { stopPropagation: () => void }) {
-		// Stop propagation to prevent triggering parent scroll drag
-		event.stopPropagation();
-	}
-	// Handle button clicks without triggering drag
-	const handleButtonClick = (event: Event, action: () => void) => {
-		event.preventDefault();
-		event.stopPropagation();
-		action();
-	};
 </script>
 
 <div class="relative mb-2" bind:this={node.current} {style} {...attributes.current}>
@@ -296,6 +286,13 @@
 						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
 					>
 						<Trash2 size={16} />
+					</Button>
+					<Button
+						href={`/projekti/parvietot/${task.id}`}
+						variant="outline"
+						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
+					>
+						<Check size={16} />
 					</Button>
 				</div>
 			</Card.Content>

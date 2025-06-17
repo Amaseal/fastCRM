@@ -11,7 +11,29 @@
 	import { CSS, styleObjectToString } from '@dnd-kit-svelte/utilities';
 	import { SortableContext } from '@dnd-kit-svelte/sortable';
 	import { useDroppable } from '@dnd-kit-svelte/core';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	let { tab, isDragOverlay = false } = $props();
+
+	// Create tweened store for the total price animation
+	const totalPrice = tweened(0, {
+		duration: 200, // Animation duration in ms
+		easing: cubicOut
+	});
+
+	// Custom formatter to show integer values during animation
+	const formatAnimatedPrice = (value: number) => {
+		return toCurrency(Math.round(value));
+	};
+
+	// Update tweened value when tasks change
+	$effect(() => {
+		const newTotal = (tab?.tasks || []).reduce(
+			(sum: number, task: Task) => sum + (task.price || 0),
+			0
+		);
+		totalPrice.set(newTotal);
+	});
 
 	// Make the tab sortable (for reordering lists)
 	const {
@@ -53,12 +75,9 @@
 					<Button variant="ghost" href="/projekti/saraksti/labot/{tab?.id || ''}">
 						<Card.Title class="text-base">{tab?.title || 'Unknown'}</Card.Title>
 					</Button>
-					<Card.Description
-						>{toCurrency(
-							(tab?.tasks || []).reduce((sum: number, task: Task) => sum + (task.price || 0), 0)
-						)}
-						&#8364</Card.Description
-					>
+					<Card.Description class="font-mono">
+						{formatAnimatedPrice($totalPrice)} &#8364
+					</Card.Description>
 					<div class="ml-auto">
 						<div
 							bind:this={tabActivatorNode.current}
@@ -89,7 +108,7 @@
 							<div
 								class="flex h-full w-full items-center justify-center text-gray-500 dark:text-gray-400"
 							>
-								No tasks
+								Nav projektu
 							</div>
 						{:else}
 							{#each tab?.tasks || [] as task (task.id)}

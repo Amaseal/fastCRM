@@ -55,9 +55,6 @@
 	});
 
 	const { form: formData, form: errors, form: allErrors, enhance } = form;
-
-	$inspect('Form Data:', $formData);
-	$inspect(form);
 	const currentUser = $derived(page.data.user);
 	const df = new DateFormatter('lv-LV', {
 		dateStyle: 'long'
@@ -271,11 +268,5 @@
 				</form>
 			</Card.Content>
 		</Card.Root>
-	</div>
-	<div class="w-80 bg-gray-100 p-4 text-xs dark:bg-gray-800">
-		<h3 class="mb-2 font-bold">Form Data:</h3>
-		<pre class="whitespace-pre-wrap">{JSON.stringify($formData, null, 2)}</pre>
-		<pre>All errors: {JSON.stringify($allErrors, null, 2)}</pre>
-		<pre>Errors: {JSON.stringify($errors, null, 2)}</pre>
 	</div>
 </div>
