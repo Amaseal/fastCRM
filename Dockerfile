@@ -55,6 +55,7 @@ COPY --from=base /app/static ./static
 COPY --from=base /app/drizzle ./drizzle
 COPY --from=base /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=base /app/scripts ./scripts
+COPY --from=base /app/src ./src
 
 # Copy startup script
 COPY start.sh ./

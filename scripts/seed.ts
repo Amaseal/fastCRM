@@ -2,7 +2,7 @@
 import { config } from 'dotenv';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
-import * as schema from '../src/lib/server/db/schema.js';
+import * as schema from '../src/lib/server/db/schema.ts';
 import { eq, and, desc } from 'drizzle-orm';
 
 // Load environment variables
