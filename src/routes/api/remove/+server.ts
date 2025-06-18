@@ -1,11 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { unlink } from 'fs/promises';
 import path from 'path';
-import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request }) => {
-	// In development: static/uploads, in production: uploads
-	const uploadDir = env.NODE_ENV === 'production' ? 'uploads' : 'static/uploads';
+	// Always use uploads folder at project root in both dev and production
+	const uploadDir = 'uploads';
 	const uploadsUrl = '/uploads';
 	const { path: fileName } = await request.json();
 	if (!fileName) {

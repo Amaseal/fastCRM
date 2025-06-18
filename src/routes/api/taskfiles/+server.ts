@@ -9,23 +9,10 @@ import { db } from '$lib/server/db';
 import { file } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
-// Get the directory path for upload storage from environment variable
+// Get the directory path for upload storage
 function getUploadsDir() {
-	// In development: static/uploads, in production: uploads
-	const uploadsDir = env.NODE_ENV === 'production' ? 'uploads' : 'static/uploads';
-
-	// If this is a relative path, resolve it relative to the project root
-	if (!uploadsDir.startsWith('/') && !uploadsDir.match(/^[A-Z]:\\/)) {
-		const __dirname = dirname(fileURLToPath(import.meta.url));
-		// Navigate up to the project root from the current file location
-		// From: src/routes/api/taskfiles/+server.ts
-		// To:   project root (need to go up 4 levels: taskfiles -> api -> routes -> src -> root)
-		const resolved = join(__dirname, '../../../../', uploadsDir);
-		return resolved;
-	}
-
-	// For absolute paths, use as is
-	return uploadsDir;
+	// Always use uploads folder at project root in both dev and production
+	return 'uploads';
 }
 
 // Ensure the upload directory exists
