@@ -23,8 +23,9 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Create data directory for build
+# Create data directory for build and initialize database
 RUN mkdir -p /app/data
+RUN pnpm run db:push
 
 # Build the application (DATABASE_URL is available from build arg)
 RUN pnpm run build
@@ -36,9 +37,6 @@ FROM node:20-alpine AS production
 ARG DATABASE_URL
 ARG NODE_ENV=production
 ARG NEXTCLOUD_URL
-ARG NEXTCLOUD_USERNAME
-ARG NEXTCLOUD_PASSWORD
-ARG GAME_PASSWORD
 
 # Install pnpm
 RUN npm install -g pnpm
