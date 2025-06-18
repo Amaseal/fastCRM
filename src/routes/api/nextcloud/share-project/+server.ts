@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { tab, task, user } from '$lib/server/db/schema';
+import { task, user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, url }) => {
 	const sessionUser = locals.user;
 	if (!sessionUser) {
 		return json({ error: 'Nav autorizēts' }, { status: 401 });
@@ -33,40 +33,27 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!NEXTCLOUD_URL) {
 		return json({ error: 'Nextcloud URL nav konfigurēts sistēmā' }, { status: 500 });
 	}
-
 	try {
-		const { projectId, conversationToken, messageType = 'rich' } = await request.json();
-		if (!projectId || !conversationToken) {
+		const { taskId, conversationToken, messageType = 'rich' } = await request.json();
+		if (!taskId || !conversationToken) {
 			return json({ error: 'Trūkst obligāto parametru' }, { status: 400 });
 		}
 
-		// Get the project (tab) with its tasks
-		const project = await db.query.tab.findFirst({
-			where: eq(tab.id, projectId),
+		// Get the task with its client information
+		const taskData = await db.query.task.findFirst({
+			where: eq(task.id, taskId),
 			with: {
-				tasks: {
-					with: {
-						client: true,
-						materials: {
-							with: {
-								material: true
-							}
-						},
-						taskProducts: {
-							with: {
-								product: true
-							}
-						},
-						files: true
-					}
-				}
+				client: true
 			}
 		});
-		if (!project) {
-			return json({ error: 'Projekts nav atrasts' }, { status: 404 });
+
+		if (!taskData) {
+			return json({ error: 'Uzdevums nav atrasts' }, { status: 404 });
 		}
 
 		const baseUrl = NEXTCLOUD_URL.replace(/\/$/, ''); // Remove trailing slash
+		const origin = url.origin;
+
 		// Create auth header using user's stored credentials
 		const auth = Buffer.from(
 			`${fullUser.nextcloud_username}:${fullUser.nextcloud_password}`
@@ -79,21 +66,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		};
 		let response;
 		if (messageType === 'rich') {
-			// For now, let's send as a formatted text message instead of rich object
-			// Rich objects in Nextcloud Talk require specific app integration
-			const taskList = project.tasks
-				.map((task) => {
-					const client = task.client ? ` (${task.client.name})` : '';
-					const status = '📋'; // Default status icon since status field doesn't exist
-					return `${status} ${task.title}${client}`;
-				})
-				.join('\n');
+			// Send formatted text message for the task
+			const clientInfo = taskData.client ? ` (${taskData.client.name})` : '';
 
 			const message =
-				`🗂️ **${project.title}**\n\n` +
-				`📊 **Kopsavilkums:** ${project.tasks.length} uzdevumi\n\n` +
-				`📋 **Uzdevumi:**\n${taskList}\n\n` +
-				`🔗 [Skatīt FastCRM](${process.env.ORIGIN || 'http://localhost:5173'}/projekti)`;
+				`📋 **${taskData.title}**${clientInfo}\n\n` +
+				`🔗 [Skatīt uzdevumu FastCRM](${origin}/projekti)`;
 
 			const payload = {
 				message: message
@@ -109,18 +87,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			});
 		} else {
 			// Send as plain text message
-			const taskList = project.tasks
-				.map((task) => {
-					const client = task.client ? ` (${task.client.name})` : '';
-					const status = '📋'; // Default status icon since status field doesn't exist
-					return `${status} ${task.title}${client}`;
-				})
-				.join('\n');
-			const message =
-				`🗂️ **${project.title}**\n\n` +
-				`📊 **Kopsavilkums:** ${project.tasks.length} uzdevumi\n\n` +
-				`📋 **Uzdevumi:**\n${taskList}\n\n` +
-				`🔗 [Skatīt FastCRM](${process.env.ORIGIN || 'http://localhost:5173'}/projekti)`;
+			const clientInfo = taskData.client ? ` (${taskData.client.name})` : '';
+			const message = `📋 ${taskData.title}${clientInfo}\n\n Skatīt FastCRM: ${origin}/projekti`;
 
 			const payload = {
 				message: message
@@ -167,14 +135,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const result = await response.json();
 		return json({
 			success: true,
-			message: 'Projekts veiksmīgi nosūtīts uz Nextcloud Talk',
+			message: 'Uzdevums veiksmīgi nosūtīts uz Nextcloud Talk',
 			data: result
 		});
 	} catch (error) {
 		console.error('Error sharing to Nextcloud Talk:', error);
 		return json(
 			{
-				error: 'Neizdevās nosūtīt projektu',
+				error: 'Neizdevās nosūtīt uzdevumu',
 				details: error instanceof Error ? error.message : 'Nezināma kļūda'
 			},
 			{ status: 500 }

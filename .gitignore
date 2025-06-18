@@ -24,3 +24,7 @@ vite.config.ts.timestamp-*
 
 # SQLite
 *.db
+
+# Uploads folder - keep folder but ignore files
+static/uploads/*
+!static/uploads/.gitkeep

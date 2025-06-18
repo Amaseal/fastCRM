@@ -368,8 +368,8 @@
 
 <!-- Nextcloud Share Dialog -->
 <NextcloudShareDialog
-	projectId={task.id}
-	projectTitle={task.title}
+	taskId={task.id}
+	taskTitle={task.title}
 	bind:open={showNextcloudDialog}
 	onSuccess={handleShareSuccess}
 	onError={handleShareError}

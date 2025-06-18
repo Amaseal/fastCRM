@@ -5,10 +5,9 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Loader2, MessageSquare, Users, Lock, Globe } from '@lucide/svelte';
-
 	interface Props {
-		projectId: number;
-		projectTitle: string;
+		taskId: number;
+		taskTitle: string;
 		open?: boolean;
 		onOpenChange?: (open: boolean) => void;
 		onSuccess?: (message: string) => void;
@@ -16,8 +15,8 @@
 	}
 
 	let {
-		projectId,
-		projectTitle,
+		taskId,
+		taskTitle,
 		open = $bindable(false),
 		onOpenChange,
 		onSuccess,
@@ -71,7 +70,7 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					projectId,
+					taskId,
 					conversationToken: selectedConversation,
 					messageType
 				})
@@ -121,35 +120,23 @@
 <Dialog.Root bind:open {onOpenChange}>
 	<Dialog.Content class="max-w-2xl">
 		<Dialog.Header>
-			<Dialog.Title>Nosūtīt "{projectTitle}" uz Nextcloud Talk</Dialog.Title>
-			<Dialog.Description>Nosūtīt projekta informāciju uz Nextcloud Talk sarunu</Dialog.Description>
+			<Dialog.Title>Nosūtīt "{taskTitle}" uz Nextcloud Talk</Dialog.Title>
+			<Dialog.Description>Nosūtīt uzdevuma informāciju uz Nextcloud Talk sarunu</Dialog.Description>
 		</Dialog.Header>
-
 		<div class="space-y-6">
-			<!-- Load Conversations Button -->
-			<div class="flex justify-center">
-				<Button
-					onclick={loadConversations}
-					disabled={loadingConversations}
-					class="w-full sm:w-auto"
-				>
-					{#if loadingConversations}
-						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						Ielādē sarunas...
-					{:else}
-						Ielādēt sarunas
-					{/if}
-				</Button>
-			</div>
-
-			{#if conversations.length > 0}
+			{#if loadingConversations}
+				<div class="flex items-center justify-center py-8">
+					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+					<span class="text-muted-foreground text-sm">Ielādē sarunas...</span>
+				</div>
+			{:else if conversations.length > 0}
 				<Separator />
 
 				<!-- Conversation Selection -->
 				<div class="space-y-4">
 					<h3 class="text-sm font-medium">Izvēlieties sarunu</h3>
 
-					<div class="grid max-h-60 gap-2 overflow-y-auto">
+					<div class="custom-scroll grid max-h-60 gap-2 overflow-y-auto">
 						{#each conversations as conversation}
 							{@const IconComponent = getConversationIcon(conversation.type)}
 							<label
@@ -222,7 +209,7 @@
 					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					Nosūta...
 				{:else}
-					Nosūtīt projektu
+					Nosūtīt uzdevumu
 				{/if}
 			</Button>
 		</Dialog.Footer>

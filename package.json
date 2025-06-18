@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"start": "node build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -16,7 +17,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx scripts/seed.ts",
-		"db:reset": "drizzle-kit push && npm run db:seed"
+		"db:reset": "drizzle-kit push && npm run db:seed",
+		"db:init": "pnpm db:push && pnpm db:seed"
 	},
 	"devDependencies": {
 		"@dnd-kit-svelte/core": "^0.0.8",
