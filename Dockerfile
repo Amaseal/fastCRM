@@ -1,6 +1,14 @@
 # Use the official Node.js image
 FROM node:20-alpine AS base
 
+# Define build arguments
+ARG DATABASE_URL
+ARG NODE_ENV=production
+
+# Set environment variables from build args (only what's needed for build)
+ENV DATABASE_URL=$DATABASE_URL
+ENV NODE_ENV=$NODE_ENV
+
 # Install pnpm
 RUN npm install -g pnpm
 
@@ -16,11 +24,19 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (DATABASE_URL is available from build arg)
 RUN pnpm run build
 
 # Production stage
 FROM node:20-alpine AS production
+
+# Define runtime arguments (will be passed from build args)
+ARG DATABASE_URL
+ARG NODE_ENV=production
+ARG NEXTCLOUD_URL
+ARG NEXTCLOUD_USERNAME
+ARG NEXTCLOUD_PASSWORD
+ARG GAME_PASSWORD
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -50,9 +66,14 @@ RUN mkdir -p static/uploads && chmod 755 static/uploads
 # Expose the port
 EXPOSE 3000
 
-# Set environment variables
-ENV NODE_ENV=production
+# Set environment variables from args (runtime)
+ENV NODE_ENV=$NODE_ENV
 ENV PORT=3000
+ENV DATABASE_URL=$DATABASE_URL
+ENV NEXTCLOUD_URL=$NEXTCLOUD_URL
+ENV NEXTCLOUD_USERNAME=$NEXTCLOUD_USERNAME
+ENV NEXTCLOUD_PASSWORD=$NEXTCLOUD_PASSWORD
+ENV GAME_PASSWORD=$GAME_PASSWORD
 
 # Start the application with database initialization
 CMD ["./start.sh"]
