@@ -8,7 +8,7 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { tick } from 'svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn, debounce } from '$lib/utils.js';
 	import { useId } from 'bits-ui';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
@@ -22,10 +22,49 @@
 		form?: SuperForm<z.infer<typeof taskSchema>>;
 	}>();
 
-	const clientOptions = clients.map(({ id, name }: Client) => ({
-		value: id,
-		label: name
-	}));
+	// State for dynamic client search
+	let searchedClients = $state<Client[]>([]);
+	let isSearching = $state(false);
+	let searchTerm = $state('');
+
+	// Initialize with empty array or provided clients
+	$effect(() => {
+		if (clients && clients.length > 0) {
+			searchedClients = clients;
+		}
+	});
+
+	const clientOptions = $derived(
+		searchedClients.map(({ id, name }: Client) => ({
+			value: id,
+			label: name
+		}))
+	);
+	// Search function without debounce
+	async function performSearch(term: string) {
+		searchTerm = term;
+
+		if (term.length === 0) {
+			searchedClients = clients || [];
+			return;
+		}
+
+		isSearching = true;
+		try {
+			const response = await fetch(`/api/clients/search?q=${encodeURIComponent(term)}`);
+			if (response.ok) {
+				const results = await response.json();
+				searchedClients = results;
+			}
+		} catch (error) {
+			console.error('Error searching clients:', error);
+		} finally {
+			isSearching = false;
+		}
+	}
+
+	// Debounced search function using utils.ts debounce
+	const searchClients = debounce(performSearch, 300);
 
 	let showAddForm = $state(false);
 
@@ -70,17 +109,29 @@
 			</Form.Control>
 			<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
 				<Command.Root class="w-full max-w-full">
-					<Command.Input autofocus placeholder="Meklēt klientu..." class="h-9" />
-					<Command.Empty
-						>Šāds klients netika atrasts
-						<Button
-							variant="ghost"
-							onclick={() => {
-								showAddForm = true;
-								$formData.clientId = null;
-								$formData.newClientType = 'BTC';
-							}}>Pievienot</Button
-						>
+					<Command.Input
+						autofocus
+						placeholder="Meklēt klientu..."
+						class="h-9"
+						value={searchTerm}
+						oninput={(e) => searchClients(e.currentTarget.value)}
+					/>
+					<Command.Empty>
+						{#if isSearching}
+							Meklē...
+						{:else if searchTerm.length === 0}
+							Sāciet rakstīt, lai meklētu klientus
+						{:else}
+							Šāds klients netika atrasts
+							<Button
+								variant="ghost"
+								onclick={() => {
+									showAddForm = true;
+									$formData.clientId = null;
+									$formData.newClientType = 'BTC';
+								}}>Pievienot</Button
+							>
+						{/if}
 					</Command.Empty>
 					<Command.Group value="clients">
 						{#each clientOptions as client (client.value)}

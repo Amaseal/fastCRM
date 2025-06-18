@@ -85,6 +85,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Panelis - Fastbreak CRM</title>
+</svelte:head>
+
 <header
 	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
 >
@@ -175,11 +179,6 @@
 								<div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
 								<div class="flex-1">
 									<p class="text-sm">{notification.text}</p>
-									<span class="text-muted-foreground text-xs">
-										{typeof notification.created_at === 'number'
-											? new Date(notification.created_at * 1000).toLocaleDateString('lv-LV')
-											: new Date(notification.created_at).toLocaleDateString('lv-LV')}
-									</span>
 								</div>
 							</div>
 						{:else}

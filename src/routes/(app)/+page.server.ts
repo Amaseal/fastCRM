@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const today = new Date();
 	const tomorrow = new Date(today);
 	tomorrow.setDate(tomorrow.getDate() + 1);
-	
+
 	const todayStr = today.toISOString().split('T')[0];
 	const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
@@ -25,7 +25,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			taskCount: count(task.id)
 		})
 		.from(user)
-		.leftJoin(task, sql`${task.managerId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`)
+		.leftJoin(
+			task,
+			sql`${task.managerId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`
+		)
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
 		.limit(5);
@@ -38,7 +41,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			taskCount: count(task.id)
 		})
 		.from(user)
-		.leftJoin(task, sql`${task.responsiblePersonId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`)
+		.leftJoin(
+			task,
+			sql`${task.responsiblePersonId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`
+		)
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
 		.limit(5);
@@ -66,15 +72,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.orderBy(task.endDate)
 		.limit(10);
 
-	// Get user notifications
 	const userNotifications = await db
 		.select({
 			id: notification.id,
-			text: notification.text,
-			created_at: notification.created_at
+			text: notification.message,
+			userId: notification.userId
 		})
 		.from(notification)
-		.orderBy(desc(notification.created_at))
 		.limit(5);
 
 	// Get best clients by total ordered
@@ -87,7 +91,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(client)
 		.where(sql`${client.totalOrdered} > 0`)
 		.orderBy(desc(client.totalOrdered))
-		.limit(5);	// Get all monthly profit data (not limited to 6 months for the query)
+		.limit(5); // Get all monthly profit data (not limited to 6 months for the query)
 	const monthlyProfits = await db
 		.select({
 			month: sql<string>`strftime('%Y-%m', datetime(${task.created_at}, 'unixepoch'))`,
@@ -103,10 +107,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const date = new Date();
 		date.setMonth(date.getMonth() - i);
 		const monthStr = date.toISOString().slice(0, 7); // YYYY-MM format
-		
+
 		// Find if we have data for this month
-		const monthData = monthlyProfits.find(item => item.month === monthStr);
-		
+		const monthData = monthlyProfits.find((item) => item.month === monthStr);
+
 		chartData.push({
 			month: monthStr,
 			profit: Number(monthData?.profit) || 0
@@ -119,11 +123,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			total: sum(task.price)
 		})
 		.from(task)
-		.where(sql`${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)} AND ${task.price} IS NOT NULL`);
+		.where(
+			sql`${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)} AND ${task.price} IS NOT NULL`
+		);
 	return {
-		topManagers: topManagers.filter(manager => manager.taskCount > 0),
-		topResponsiblePersons: topResponsiblePersons.filter(person => person.taskCount > 0),
-		bestClients: bestClients.filter(client => client.totalOrdered),
+		topManagers: topManagers.filter((manager) => manager.taskCount > 0),
+		topResponsiblePersons: topResponsiblePersons.filter((person) => person.taskCount > 0),
+		bestClients: bestClients.filter((client) => client.totalOrdered),
 		urgentTasks,
 		userNotifications,
 		chartData,

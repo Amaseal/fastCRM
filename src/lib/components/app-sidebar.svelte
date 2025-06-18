@@ -5,13 +5,14 @@
 	import User from '@lucide/svelte/icons/user';
 	import Blocks from '@lucide/svelte/icons/blocks';
 	import Check from '@lucide/svelte/icons/check';
+	import Gamepad2 from '@lucide/svelte/icons/gamepad-2';
 	import NavMain from './nav-main.svelte';
 
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
 	import Save from '@lucide/svelte/icons/save';
-
+	import { SettingsIcon } from '@lucide/svelte';
 	const items = [
 		{
 			title: 'Projekti',
@@ -22,11 +23,6 @@
 			title: 'Gatavie',
 			url: '/pabeigts',
 			icon: Check
-		},
-		{
-			title: 'Kalendars',
-			url: '/kalendars',
-			icon: Calendar
 		},
 		{
 			title: 'Klienti',
@@ -47,6 +43,11 @@
 			title: 'Faili',
 			url: '/faili',
 			icon: Save
+		},
+		{
+			title: 'Wordle',
+			url: '/spele',
+			icon: Gamepad2
 		}
 	];
 
@@ -72,6 +73,17 @@
 		<NavMain {items} />
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<!-- <NavUser user={data.user} /> -->
+		<Sidebar.Menu>
+			<Sidebar.MenuItem>
+				<Sidebar.MenuButton>
+					{#snippet child({ props })}
+						<a href="/settings" {...props} class="flex items-end gap-2">
+							<SettingsIcon></SettingsIcon>
+							<span class="text-base font-semibold">Iestatijumi</span>
+						</a>
+					{/snippet}
+				</Sidebar.MenuButton>
+			</Sidebar.MenuItem>
+		</Sidebar.Menu>
 	</Sidebar.Footer>
 </Sidebar.Root>

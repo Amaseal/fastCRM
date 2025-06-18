@@ -1,9 +1,7 @@
-import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
-
 import { sqliteTable as table } from 'drizzle-orm/sqlite-core';
 import * as t from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
-import { sql, type InferSelectModel } from 'drizzle-orm';
+import { type InferSelectModel } from 'drizzle-orm';
 
 export type User = InferSelectModel<typeof user>;
 export type Client = InferSelectModel<typeof client>;
@@ -14,7 +12,10 @@ export type Task = InferSelectModel<typeof task>;
 export type Tab = InferSelectModel<typeof tab>;
 export type TaskMaterial = InferSelectModel<typeof taskMaterial>;
 export type TaskProduct = InferSelectModel<typeof taskProduct>;
-export type File = InferSelectModel<typeof file>; // Add file type
+export type File = InferSelectModel<typeof file>;
+export type DailyWord = InferSelectModel<typeof dailyWord>;
+export type GameStats = InferSelectModel<typeof gameStats>;
+export type GameAttempt = InferSelectModel<typeof gameAttempts>;
 
 const timestamps = {
 	updated_at: t.int({ mode: 'timestamp' }).$onUpdate(() => new Date()),
@@ -27,6 +28,8 @@ export const user = table('users', {
 	password: t.text('password').notNull(),
 	name: t.text('name'),
 	nextcloud: t.text('nextcloud'),
+	nextcloud_username: t.text('nextcloud_username'),
+	nextcloud_password: t.text('nextcloud_password'), // App password for security
 	...timestamps
 });
 
@@ -85,10 +88,60 @@ export const tab = table('tabs', {
 	...timestamps
 });
 
-
-export const notification = table('notifications', {
+export const notification = table('notification', {
 	id: t.int('id').primaryKey({ autoIncrement: true }),
-	text: t.text('text').notNull(),
+	message: t.text('message').notNull(),
+	userId: t
+		.text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' })
+});
+
+export const inviteCodes = table('invite_codes', {
+	id: t.int('id').primaryKey({ autoIncrement: true }),
+	code: t.text('code').notNull().unique(),
+	expiresAt: t.text('expires_at').notNull(),
+	used: t.integer('used', { mode: 'boolean' }).notNull().default(false)
+});
+
+// Game tables for Wordle-like game
+export const dailyWord = table('daily_words', {
+	id: t.int('id').primaryKey({ autoIncrement: true }),
+	word: t.text('word').notNull(),
+	date: t.text('date').notNull().unique(), // YYYY-MM-DD format
+	...timestamps
+});
+
+export const gameStats = table('game_stats', {
+	id: t.int('id').primaryKey({ autoIncrement: true }),
+	userId: t
+		.text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	totalGames: t.int('total_games').notNull().default(0),
+	totalWins: t.int('total_wins').notNull().default(0),
+	averageGuesses: t.real('average_guesses').default(0),
+	averageTime: t.real('average_time').default(0), // in seconds
+	bestTime: t.int('best_time'), // best time in seconds
+	currentStreak: t.int('current_streak').notNull().default(0),
+	maxStreak: t.int('max_streak').notNull().default(0),
+	...timestamps
+});
+
+export const gameAttempts = table('game_attempts', {
+	id: t.int('id').primaryKey({ autoIncrement: true }),
+	userId: t
+		.text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	dailyWordId: t
+		.int('daily_word_id')
+		.notNull()
+		.references(() => dailyWord.id),
+	guesses: t.text('guesses').notNull(), // JSON array of guess attempts
+	solved: t.integer('solved', { mode: 'boolean' }).notNull().default(false),
+	guessCount: t.int('guess_count').notNull(),
+	timeSpent: t.int('time_spent'), // time in seconds
 	...timestamps
 });
 
@@ -105,16 +158,28 @@ export const file = table('files', {
 // TaskMaterials (junction table for task-material many-to-many)
 export const taskMaterial = table('taskMaterials', {
 	id: t.int('id').primaryKey({ autoIncrement: true }),
-	taskId: t.int('task_id').notNull().references(() => task.id),
-	materialId: t.int('material_id').notNull().references(() => material.id),
+	taskId: t
+		.int('task_id')
+		.notNull()
+		.references(() => task.id),
+	materialId: t
+		.int('material_id')
+		.notNull()
+		.references(() => material.id),
 	...timestamps
 });
 
 // TaskProducts
 export const taskProduct = table('taskProducts', {
 	id: t.int('id').primaryKey({ autoIncrement: true }),
-	taskId: t.int('task_id').notNull().references(() => task.id),
-	productId: t.int('product_id').notNull().references(() => product.id),
+	taskId: t
+		.int('task_id')
+		.notNull()
+		.references(() => task.id),
+	productId: t
+		.int('product_id')
+		.notNull()
+		.references(() => product.id),
 	count: t.int('count').default(1),
 	...timestamps
 });
@@ -186,14 +251,16 @@ export const taskProductRelations = relations(taskProduct, ({ one }) => ({
 	})
 }));
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
 	managedTasks: many(task, { relationName: 'managedTasks' }),
-	responsibleTasks: many(task, { relationName: 'responsibleTasks' })
+	responsibleTasks: many(task, { relationName: 'responsibleTasks' }),
+	gameStats: one(gameStats),
+	gameAttempts: many(gameAttempts)
 }));
 
 // Relations for Tab
 export const tabRelations = relations(tab, ({ many, one }) => ({
-	tasks: many(task),
+	tasks: many(task)
 }));
 
 export const materialRelations = relations(material, ({ many }) => ({
@@ -214,6 +281,30 @@ export const fileRelations = relations(file, ({ one }) => ({
 		fields: [file.taskId],
 		references: [task.id],
 		relationName: 'taskFiles'
-	}),
+	})
 }));
 
+// Relations for Invite Code
+
+// Game relations
+export const dailyWordRelations = relations(dailyWord, ({ many }) => ({
+	attempts: many(gameAttempts)
+}));
+
+export const gameStatsRelations = relations(gameStats, ({ one }) => ({
+	user: one(user, {
+		fields: [gameStats.userId],
+		references: [user.id]
+	})
+}));
+
+export const gameAttemptsRelations = relations(gameAttempts, ({ one }) => ({
+	user: one(user, {
+		fields: [gameAttempts.userId],
+		references: [user.id]
+	}),
+	dailyWord: one(dailyWord, {
+		fields: [gameAttempts.dailyWordId],
+		references: [dailyWord.id]
+	})
+}));

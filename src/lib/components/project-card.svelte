@@ -13,12 +13,30 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import { Check, Trash2 } from '@lucide/svelte';
+	import { Check, Trash2, MoreVertical } from '@lucide/svelte';
+	import { MessageSquare } from '@lucide/svelte';
 	import PrintProject from './print-project.svelte';
+	import NextcloudShareDialog from './nextcloud-share-dialog-simple.svelte';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
-
+	import { getFlash } from 'sveltekit-flash-message';
+	import { page } from '$app/stores';
 	let { task, container, isDragOverlay = false } = $props();
+	let showNextcloudDialog = $state(false);
+	const flash = getFlash(page);
+
+	// Handle successful share to Nextcloud Talk
+	function handleShareSuccess(message: string) {
+		$flash = { type: 'success', message };
+		showNextcloudDialog = false;
+	}
+
+	// Handle share error
+	function handleShareError(message: string) {
+		$flash = { type: 'error', message };
+	}
 	// Make the task sortable
 	const {
 		attributes,
@@ -265,35 +283,71 @@
 					</p>
 					<hr class="my-2 border-gray-300" />
 				{/if}
-				<div class="flex justify-between gap-2">
+				<div class="flex items-center justify-between">
 					<Button
 						href={`/projekti/labot/${task.id}`}
-						variant="outline"
-						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
+						variant="ghost"
+						size="sm"
+						class="justify-start"
 					>
-						<Pencil size={16} />
+						<Pencil class="mr-2 h-4 w-4" />
+						Labot projektu
 					</Button>
-					<Button
-						variant="outline"
-						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
-						onclick={printComponent}
-					>
-						<Printer size={16} />
-					</Button>
-					<Button
-						href={`/projekti/izdzest/${task.id}`}
-						variant="outline"
-						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
-					>
-						<Trash2 size={16} />
-					</Button>
-					<Button
-						href={`/projekti/parvietot/${task.id}`}
-						variant="outline"
-						class="interactive flex items-center rounded-lg border p-3 hover:border-purple-500 hover:text-purple-400"
-					>
-						<Check size={16} />
-					</Button>
+					<Popover.Root>
+						<Popover.Trigger
+							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-9 items-center justify-center rounded-md border px-0 py-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+						>
+							<MoreVertical class="h-4 w-4" />
+							<span class="sr-only">Atvērt darbību izvēlni</span>
+						</Popover.Trigger>
+						<Popover.Content align="end" class="w-48 p-2">
+							<div class="space-y-1">
+								<Button
+									onclick={printComponent}
+									variant="ghost"
+									size="sm"
+									class="w-full justify-start"
+								>
+									<Printer class="mr-2 h-4 w-4" />
+									Drukāt projektu
+								</Button>
+
+								<Button
+									onclick={() => {
+										showNextcloudDialog = true;
+									}}
+									variant="ghost"
+									size="sm"
+									class="w-full justify-start"
+								>
+									<MessageSquare class="mr-2 h-4 w-4" />
+									Dalīties Talk
+								</Button>
+
+								<Separator class="my-1" />
+
+								<Button
+									href={`/projekti/parvietot/${task.id}`}
+									variant="ghost"
+									size="sm"
+									class="w-full justify-start"
+								>
+									<Check class="mr-2 h-4 w-4" />
+									Atzīmēt kā pabeigtu
+								</Button>
+
+								<Button
+									href={`/projekti/izdzest/${task.id}`}
+									variant="ghost"
+									size="sm"
+									class="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+								>
+									<Trash2 class="mr-2 h-4 w-4" />
+									Dzēst projektu
+								</Button>
+							</div>
+						</Popover.Content>
+					</Popover.Root>
 				</div>
 			</Card.Content>
 		</Card.Root>
@@ -311,6 +365,15 @@
 <div bind:this={printableRef} style="display: none;">
 	<PrintProject {task} />
 </div>
+
+<!-- Nextcloud Share Dialog -->
+<NextcloudShareDialog
+	projectId={task.id}
+	projectTitle={task.title}
+	bind:open={showNextcloudDialog}
+	onSuccess={handleShareSuccess}
+	onError={handleShareError}
+/>
 
 <style>
 	/* Unused styles removed - they were for date-based styling that's not currently used */

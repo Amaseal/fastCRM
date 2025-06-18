@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { task, tab, client, material, product } from '$lib/server/db/schema';
-import { asc, eq, and, or, sql } from 'drizzle-orm';
+import { asc, eq, and, or, sql, ne } from 'drizzle-orm';
 import { superValidate } from 'sveltekit-superforms';
 import { taskSchema } from './schema';
 
@@ -71,8 +71,8 @@ export const load = async ({ url, locals }) => {
 		}
 	});
 	const tasks = (await tasksQuery) as TaskWithRelations[];
-
 	const tabs = (await db.query.tab.findMany({
+		where: ne(tab.title, 'done'),
 		orderBy: [asc(tab.order)]
 	})) as TabWithRelations[];
 
