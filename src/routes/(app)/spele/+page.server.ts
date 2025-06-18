@@ -3,7 +3,7 @@ import { db } from '$lib/server/db';
 import { gameStats, gameAttempts, dailyWord } from '$lib/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, fetch }) => {
 	const user = locals.user;
 	if (!user) {
 		return {
@@ -34,9 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 
 		// Get top 10 leaderboard
-		const leaderboardData = await fetch(
-			`${process.env.ORIGIN || 'http://localhost:5173'}/api/game/leaderboard?limit=10`
-		);
+		const leaderboardData = await fetch('/api/game/leaderboard?limit=10');
 		const leaderboard = leaderboardData.ok ? await leaderboardData.json() : [];
 
 		return {

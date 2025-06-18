@@ -90,7 +90,7 @@
 </script>
 
 <svelte:head>
-	<title>Pievienot projektu</title>
+	<title>Labot {data.item.title}</title>
 </svelte:head>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -105,7 +105,7 @@
 					><X /></a
 				>
 
-				<h2 class="text-lg font-semibold">Pievienot jaunu projektu</h2>
+				<h2 class="text-lg font-semibold">Labot {data.item.title}</h2>
 			</Card.Header>
 			<Card.Content class="p-6 pb-2">
 				<form method="POST" use:enhance enctype="multipart/form-data">

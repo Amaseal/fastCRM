@@ -19,8 +19,12 @@
 	} from '@dnd-kit-svelte/core';
 	import { SortableContext, arrayMove } from '@dnd-kit-svelte/sortable';
 	import ProjectCard from '$lib/components/project-card.svelte';
+	import { getFlash } from 'sveltekit-flash-message';
+
 	let { data, children } = $props();
 	let tabs = $state(data.tabs);
+
+	const flash = getFlash(page);
 
 	$effect(() => {
 		tabs = data.tabs;
@@ -103,8 +107,8 @@
 				const formData = new FormData();
 				formData.append('draggedTab', JSON.stringify(tabs[newIndex]));
 				formData.append('targetIndex', newIndex.toString());
-
 				try {
+					console.log('[Frontend] Submitting tab reorder request');
 					const response = await fetch('?/reorderTabs', {
 						method: 'POST',
 						body: formData,
@@ -112,18 +116,31 @@
 							'x-sveltekit-action': 'true'
 						}
 					});
+
+					console.log('[Frontend] Tab reorder response status:', response.status);
+
 					if (response.ok) {
 						// Invalidate to sync with server data - this is crucial for tab reordering
 						await invalidateAll();
+						console.log('[Frontend] Tab reorder successful, data invalidated');
 					} else {
+						console.error('[Frontend] Tab reorder failed with status:', response.status);
 						// Revert the optimistic update if server request failed
 						const revertTabs = [...tabs];
 						const [movedTab] = revertTabs.splice(newIndex, 1);
 						revertTabs.splice(oldIndex, 0, movedTab);
 						tabs = revertTabs;
+
+						// Try to get error message from response
+						try {
+							const errorData = await response.json();
+							console.error('[Frontend] Server error details:', errorData);
+						} catch (e) {
+							console.error('[Frontend] Could not parse error response');
+						}
 					}
 				} catch (error) {
-					console.error('Tab reorder failed:', error);
+					console.error('[Frontend] Tab reorder network/unexpected error:', error);
 					// Revert the optimistic update
 					const revertTabs = [...tabs];
 					const [movedTab] = revertTabs.splice(newIndex, 1);
@@ -157,8 +174,8 @@
 					formData.append('draggedItem', JSON.stringify(task));
 					formData.append('sourceContainer', sourceTab.id.toString());
 					formData.append('targetContainer', targetTabId.toString());
-
 					try {
+						console.log('[Frontend] Submitting task move request');
 						const response = await fetch('?/editCategory', {
 							method: 'POST',
 							body: formData,
@@ -166,16 +183,31 @@
 								'x-sveltekit-action': 'true'
 							}
 						});
+
+						console.log('[Frontend] Task move response status:', response.status);
+
 						if (!response.ok) {
+							console.error('[Frontend] Task move failed with status:', response.status);
 							// Revert the optimistic update if server request failed
 							if (targetTab) {
 								targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 							}
 							sourceTab.tasks = [...(sourceTab.tasks || []), task];
 							tabs = [...tabs];
+
+							// Try to get error message from response
+							try {
+								const errorData = await response.json();
+								console.error('[Frontend] Server error details:', errorData);
+							} catch (e) {
+								console.error('[Frontend] Could not parse error response');
+							}
+						} else {
+							console.log('[Frontend] Task move successful');
 						}
 					} catch (error) {
-						console.error('Task move failed:', error); // Revert the optimistic update
+						console.error('[Frontend] Task move network/unexpected error:', error);
+						// Revert the optimistic update
 						if (targetTab) {
 							targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 						}

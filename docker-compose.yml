@@ -12,7 +12,8 @@ services:
       - BODY_SIZE_LIMIT=1073741824
     labels:
       - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=1073741824"
-      - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=1073741824"    volumes:
+      - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=1073741824"    
+    volumes:
       - uploads_data:/app/uploads
       - db_data:/app
     restart: unless-stopped
