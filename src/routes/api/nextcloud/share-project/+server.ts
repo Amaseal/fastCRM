@@ -88,7 +88,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 		} else {
 			// Send as plain text message
 			const clientInfo = taskData.client ? ` (${taskData.client.name})` : '';
-			const message = `📋 ${taskData.title}${clientInfo}\n\n Skatīt FastCRM: ${origin}/projekti`;
+			const message = `📋 ${taskData.title}${clientInfo}\n\n Skatīt FastCRM: ${origin}/projekti/labot/${taskData.id}`;
 
 			const payload = {
 				message: message

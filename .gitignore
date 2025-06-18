@@ -28,3 +28,5 @@ vite.config.ts.timestamp-*
 # Uploads folder - keep folder but ignore files
 static/uploads/*
 !static/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
