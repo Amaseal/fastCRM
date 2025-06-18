@@ -62,7 +62,7 @@ COPY start.sh ./
 RUN chmod +x start.sh
 
 # Create uploads and data directories with proper permissions
-RUN mkdir -p static/uploads && chmod 755 static/uploads
+RUN mkdir -p uploads && chmod 755 uploads
 RUN mkdir -p data && chmod 755 data
 
 # Expose the port
