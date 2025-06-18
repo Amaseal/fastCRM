@@ -60,8 +60,9 @@ COPY --from=base /app/scripts ./scripts
 COPY start.sh ./
 RUN chmod +x start.sh
 
-# Create uploads directory with proper permissions
+# Create uploads and data directories with proper permissions
 RUN mkdir -p static/uploads && chmod 755 static/uploads
+RUN mkdir -p data && chmod 755 data
 
 # Expose the port
 EXPOSE 3000
