@@ -21,7 +21,30 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 40s  # Database management tool (only enable when needed)
+  db-studio:
+    build: .
+    ports:
+      - "4983:4983"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./data/local.db
+    volumes:
+      - db_data:/app/data
+    command: sh -c "pnpm install --include=dev && pnpm run db:studio --host 0.0.0.0"
+    profiles:
+      - debug
+    restart: "no"
+
+  adminer:
+    image: adminer:4
+    ports:
+      - "8080:8080"
+    volumes:
+      - db_data:/var/www/html/uploads
+    profiles:
+      - debug
+    restart: unless-stopped
 
 volumes:
   uploads_data:
