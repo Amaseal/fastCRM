@@ -222,6 +222,10 @@
 						class="cursor-grab rounded p-2 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-800"
 						role="button"
 						tabindex="0"
+						data-task-drag-handle="true"
+						onmousedown={(e) => e.stopPropagation()}
+						onpointerdown={(e) => e.stopPropagation()}
+						ontouchstart={(e) => e.stopPropagation()}
 					>
 						<GripVertical size="16" />
 					</div>

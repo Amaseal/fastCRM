@@ -67,14 +67,28 @@
 		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(taskId)));
 	}
 	function handleDragStart({ active }: DragStartEvent) {
+		console.log('[Frontend] Drag start - raw active:', active);
+		console.log('[Frontend] Active data:', active.data);
+		console.log('[Frontend] Active data type:', active.data?.type);
+
 		activeType = active.data?.type as 'tab' | 'task';
+		console.log('[Frontend] Set activeType to:', activeType);
 
 		if (activeType === 'tab') {
 			activeItem = tabs.find((tab) => tab.id === Number(active.id));
+			console.log('[Frontend] Found tab for drag overlay:', activeItem?.title || 'NOT FOUND');
 		} else if (activeType === 'task') {
 			const containingTab = findTabContainingTask(active.id as string);
+			console.log('[Frontend] Containing tab for task:', containingTab?.title || 'NOT FOUND');
 			activeItem = containingTab?.tasks?.find((task) => task.id === Number(active.id));
+			console.log('[Frontend] Found task for drag overlay:', activeItem?.title || 'NOT FOUND');
+		} else {
+			console.warn('[Frontend] Unknown activeType:', activeType);
+			activeItem = null;
 		}
+
+		console.log('[Frontend] Final activeItem:', activeItem);
+		console.log('[Frontend] Final activeType:', activeType);
 
 		// Immediately disable scroll and keep it disabled for the entire drag operation
 		$disableScroll = true;
@@ -293,12 +307,20 @@
 			{/each}
 		</div>
 	</SortableContext>
-
 	<DragOverlay>
 		{#if activeType === 'task' && activeItem}
+			{console.log('[Frontend] Rendering task drag overlay:', activeItem.title)}
 			<ProjectCard task={activeItem} container={''} isDragOverlay={true} />
 		{:else if activeType === 'tab' && activeItem}
+			{console.log('[Frontend] Rendering tab drag overlay:', activeItem.title)}
 			<List tab={activeItem} isDragOverlay={true} />
+		{:else}
+			{console.log(
+				'[Frontend] No drag overlay - activeType:',
+				activeType,
+				'activeItem:',
+				!!activeItem
+			)}
 		{/if}
 	</DragOverlay>
 </DndContext>
