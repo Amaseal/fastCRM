@@ -18,11 +18,11 @@
 		form?: SuperForm<z.infer<typeof taskSchema>>;
 		existingFiles?: { id: number; filename: string; downloadUrl: string; size: number }[];
 		taskId?: number;
-	}>();
-	// Types
+	}>(); // Types
 	type FileUpload = {
 		file: File;
 		fileId?: number;
+		downloadUrl?: string;
 		uploading: boolean;
 		progress: number;
 		error: boolean;
@@ -67,7 +67,6 @@
 		if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 		return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 	}
-
 	async function loadExistingFiles(fileIds: number[]) {
 		try {
 			const files = await Promise.all(
@@ -79,7 +78,7 @@
 							return {
 								id,
 								filename: data.filename,
-								downloadUrl: data.url,
+								downloadUrl: data.url, // This is the correct download URL
 								size: data.size
 							};
 						}
@@ -92,11 +91,10 @@
 		} catch (error) {
 			console.error('Error loading existing files:', error);
 		}
-	}
-	// File upload
+	} // File upload
 	async function uploadFile(
 		file: File
-	): Promise<{ success: boolean; fileId?: number; error?: string }> {
+	): Promise<{ success: boolean; fileId?: number; downloadUrl?: string; error?: string }> {
 		if (!browser) return { success: false, error: 'Not in browser' };
 
 		const formData = new FormData();
@@ -114,7 +112,7 @@
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
-					return { success: true, fileId: result.fileId };
+					return { success: true, fileId: result.fileId, downloadUrl: result.url };
 				}
 			}
 
@@ -135,12 +133,16 @@
 			uploadedFiles = [...uploadedFiles, newUpload];
 
 			// Upload file
-			const result = await uploadFile(file);
-
-			// Update file state
+			const result = await uploadFile(file); // Update file state
 			uploadedFiles = uploadedFiles.map((f) =>
 				f.file === file
-					? { ...f, uploading: false, error: !result.success, fileId: result.fileId }
+					? {
+							...f,
+							uploading: false,
+							error: !result.success,
+							fileId: result.fileId,
+							downloadUrl: result.downloadUrl
+						}
 					: f
 			);
 			if (result.success) {
@@ -231,7 +233,8 @@
 			...fileData,
 			uploading: false,
 			error: !result.success,
-			fileId: result.fileId
+			fileId: result.fileId,
+			downloadUrl: result.downloadUrl
 		};
 		if (result.success) {
 			$flash = { type: 'success', message: `Veiksmīgi augšuplādēts: ${fileData.file.name}` };
@@ -326,13 +329,13 @@
 				>
 					Retry
 				</button>
-			{:else if file.fileId}
+			{:else if file.fileId && file.downloadUrl}
 				<button
 					type="button"
 					class="text-sm text-blue-500 hover:text-blue-700"
 					onclick={() =>
 						downloadFile({
-							downloadUrl: `/api/taskfiles/download/${file.fileId}`,
+							downloadUrl: file.downloadUrl!,
 							filename: file.file.name
 						})}
 					title="Download"
