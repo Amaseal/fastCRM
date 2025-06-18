@@ -11,12 +11,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		return new Response(JSON.stringify({ success: false, error: 'No file uploaded' }), {
 			status: 400
 		});
-	}
-	const buffer = Buffer.from(await file.arrayBuffer());
+	}	const buffer = Buffer.from(await file.arrayBuffer());
 	
 	// In development, use static/uploads
-	// In production, SvelteKit moves static contents to build root, so use uploads directly
-	const uploadDir = dev ? 'static/uploads' : 'uploads';
+	// In production, files are served from build/client/uploads (copied to /app/build in Docker)
+	const uploadDir = dev ? 'static/uploads' : 'build/client/uploads';
 	const uploadsUrl = '/uploads';
 	const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
 	const filePath = path.join(uploadDir, fileName);
