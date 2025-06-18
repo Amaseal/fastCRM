@@ -11,8 +11,9 @@ import { eq } from 'drizzle-orm';
 
 // Get the directory path for upload storage from environment variable
 function getUploadsDir() {
-	const uploadsDir = env.VITE_UPLOADS_DIR || 'static/uploads';
-	
+	// In development: static/uploads, in production: uploads
+	const uploadsDir = env.NODE_ENV === 'production' ? 'uploads' : 'static/uploads';
+
 	// If this is a relative path, resolve it relative to the project root
 	if (!uploadsDir.startsWith('/') && !uploadsDir.match(/^[A-Z]:\\/)) {
 		const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -48,11 +49,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		const uploadedFile = formData.get('file') as File;
 		// Optional task ID - if provided, will associate the file with this task immediately
 		const taskId = formData.get('taskId') as string | null;
-		
+
 		if (!uploadedFile) {
 			return json({ success: false, error: 'No file provided' }, { status: 400 });
 		}
-		
+
 		// Sanitize the filename but preserve the original name
 		const sanitizedName = uploadedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
 
@@ -75,33 +76,39 @@ export const POST: RequestHandler = async ({ request }) => {
 		const dateString = `${day}.${month}.${year}`;
 
 		// Format: filename-DD.MM.YY.ext
-		const filename = `${fileName}-${dateString}${fileExt}`;		// Get upload directory and ensure it exists
+		const filename = `${fileName}-${dateString}${fileExt}`; // Get upload directory and ensure it exists
 		const uploadDir = await ensureUploadDir();
 		const filePath = join(uploadDir, filename);
-		
+
 		// Write file to disk
 		await writeFile(filePath, Buffer.from(await uploadedFile.arrayBuffer()));
 
 		// Create the URL path - always /uploads regardless of environment
 		const fileUrl = `/uploads/${filename}`;
-		
+
 		// Create a database entry for the file
 		let newFile;
-		
+
 		if (taskId) {
 			// If taskId is provided, associate with task
-			[newFile] = await db.insert(file).values({
-				filename: uploadedFile.name, // Store original filename for display
-				downloadUrl: fileUrl,
-				size: uploadedFile.size,
-				taskId: parseInt(taskId, 10)
-			}).returning();
+			[newFile] = await db
+				.insert(file)
+				.values({
+					filename: uploadedFile.name, // Store original filename for display
+					downloadUrl: fileUrl,
+					size: uploadedFile.size,
+					taskId: parseInt(taskId, 10)
+				})
+				.returning();
 		} else {
-			[newFile] = await db.insert(file).values({
-				filename: uploadedFile.name,
-				downloadUrl: fileUrl,
-				size: uploadedFile.size
-			}).returning();
+			[newFile] = await db
+				.insert(file)
+				.values({
+					filename: uploadedFile.name,
+					downloadUrl: fileUrl,
+					size: uploadedFile.size
+				})
+				.returning();
 		}
 
 		// Return the file information and database ID
@@ -138,14 +145,14 @@ export const DELETE: RequestHandler = async ({ request }) => {
 		}
 
 		let fileRecord;
-				// If fileId is provided, use it to find the file record
+		// If fileId is provided, use it to find the file record
 		if (fileId) {
 			[fileRecord] = await db.select().from(file).where(eq(file.id, fileId));
 			if (!fileRecord) {
 				return json({ success: false, error: 'File record not found' }, { status: 404 });
 			}
 		}
-		
+
 		// Extract filename from path
 		const downloadUrl = fileRecord?.downloadUrl || filePath;
 		const filename = downloadUrl.split('/').pop();
@@ -202,9 +209,12 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 
 		let fileRecord;
-				// If fileId is provided, fetch file record from database
+		// If fileId is provided, fetch file record from database
 		if (fileId) {
-			[fileRecord] = await db.select().from(file).where(eq(file.id, parseInt(fileId, 10)));
+			[fileRecord] = await db
+				.select()
+				.from(file)
+				.where(eq(file.id, parseInt(fileId, 10)));
 			if (!fileRecord) {
 				return json({ success: false, error: 'File record not found' }, { status: 404 });
 			}

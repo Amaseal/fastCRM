@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { writeFile } from 'fs/promises';
 import path from 'path';
-import { VITE_UPLOADS_DIR, VITE_UPLOADS_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const formData = await request.formData();
@@ -13,8 +13,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());
-	const uploadDir = VITE_UPLOADS_DIR || 'static/uploads';
-	const uploadsUrl = VITE_UPLOADS_URL || '/uploads';
+	// In development: static/uploads, in production: uploads
+	const uploadDir = env.NODE_ENV === 'production' ? 'uploads' : 'static/uploads';
+	const uploadsUrl = '/uploads';
 	const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
 	const filePath = path.join(uploadDir, fileName);
 
