@@ -48,7 +48,7 @@
 		isDragging,
 		isSorting
 	} = useSortable({
-		id: task.id.toString(),
+		id: `task-${task.id}`,
 		data: { type: 'task', task }
 	});
 	const style = $derived(

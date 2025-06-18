@@ -74,7 +74,9 @@
 		});
 	}
 	function findTabContainingTask(taskId: string) {
-		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(taskId)));
+		// Extract actual task ID from prefixed ID
+		const actualTaskId = taskId.startsWith('task-') ? taskId.replace('task-', '') : taskId;
+		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(actualTaskId)));
 	}
 	function handleDragStart({ active }: DragStartEvent) {
 		console.log('[Frontend] Drag start - active.id:', active.id);
@@ -87,14 +89,21 @@
 
 		activeType = (active.data?.current?.type || active.data?.type) as 'tab' | 'task';
 		console.log('[Frontend] Set activeType to:', activeType);
-
 		if (activeType === 'tab') {
-			activeItem = tabs.find((tab) => tab.id === Number(active.id));
+			// Extract actual tab ID from prefixed ID
+			const actualTabId = (active.id as string).startsWith('tab-')
+				? (active.id as string).replace('tab-', '')
+				: active.id;
+			activeItem = tabs.find((tab) => tab.id === Number(actualTabId));
 			console.log('[Frontend] Found tab for drag overlay:', activeItem?.title || 'NOT FOUND');
 		} else if (activeType === 'task') {
 			const containingTab = findTabContainingTask(active.id as string);
 			console.log('[Frontend] Containing tab for task:', containingTab?.title || 'NOT FOUND');
-			activeItem = containingTab?.tasks?.find((task) => task.id === Number(active.id));
+			// Extract actual task ID from prefixed ID
+			const actualTaskId = (active.id as string).startsWith('task-')
+				? (active.id as string).replace('task-', '')
+				: active.id;
+			activeItem = containingTab?.tasks?.find((task) => task.id === Number(actualTaskId));
 			console.log('[Frontend] Found task for drag overlay:', activeItem?.title || 'NOT FOUND');
 		} else {
 			console.warn('[Frontend] Unknown activeType:', activeType, 'from data:', active.data);
@@ -115,15 +124,22 @@
 			$disableScroll = false;
 			return;
 		}
-
 		const activeId = active.id as string;
 		const overId = over.id as string;
 		const activeDataType = active.data?.type as 'tab' | 'task';
 		const overDataType = over.data?.type as 'tab' | 'task' | 'tab-content';
+
 		if (activeDataType === 'tab' && (overDataType === 'tab' || overDataType === 'tab-content')) {
-			// Handle tab reordering
-			const oldIndex = tabs.findIndex((tab) => tab.id === Number(activeId));
-			const newIndex = tabs.findIndex((tab) => tab.id === Number(overId));
+			// Handle tab reordering - extract actual tab IDs
+			const actualActiveId = activeId.startsWith('tab-') ? activeId.replace('tab-', '') : activeId;
+			const actualOverId = overId.startsWith('tab-')
+				? overId.replace('tab-', '')
+				: overId.startsWith('tab-content-')
+					? overId.replace('tab-content-', '')
+					: overId;
+
+			const oldIndex = tabs.findIndex((tab) => tab.id === Number(actualActiveId));
+			const newIndex = tabs.findIndex((tab) => tab.id === Number(actualOverId));
 			if (oldIndex !== newIndex) {
 				// Optimistically update the UI first for immediate feedback
 				// Create a new array instead of using arrayMove to avoid state proxy issues
@@ -183,11 +199,18 @@
 				$disableScroll = false;
 			}
 		} else if (activeDataType === 'task' && overDataType === 'tab-content') {
-			// Handle task movement between tabs
+			// Handle task movement between tabs - extract actual IDs
+			const actualActiveId = activeId.startsWith('task-')
+				? activeId.replace('task-', '')
+				: activeId;
+			const actualOverId = overId.startsWith('tab-content-')
+				? overId.replace('tab-content-', '')
+				: overId;
+
 			const sourceTab = findTabContainingTask(activeId);
-			const targetTabId = Number(overId);
+			const targetTabId = Number(actualOverId);
 			if (sourceTab && sourceTab.id !== targetTabId) {
-				const task = sourceTab.tasks?.find((t) => t.id === Number(activeId));
+				const task = sourceTab.tasks?.find((t) => t.id === Number(actualActiveId));
 
 				if (task) {
 					// Optimistically update the UI first
@@ -305,7 +328,7 @@
 	onDragOver={handleDragOver}
 	onDragCancel={handleDragCancel}
 >
-	<SortableContext items={tabs.map((tab) => tab.id.toString())}>
+	<SortableContext items={tabs.map((tab) => `tab-${tab.id}`)}>
 		<div
 			use:horizontalDragScroll={$disableScroll}
 			class="flex h-[calc(100vh-110px)] gap-4 overflow-x-auto pb-2
