@@ -29,17 +29,6 @@
 		tabs = data.tabs;
 	});
 
-	// Debug overlay state
-	$effect(() => {
-		if (activeType || activeItem) {
-			console.log('[Frontend] Overlay state changed:', {
-				activeType,
-				activeItem: activeItem?.title || 'NO ITEM',
-				hasActiveItem: !!activeItem
-			});
-		}
-	});
-
 	let searchTerm = $state(page.url.searchParams.get('search') || '');
 	let activeItem = $state<any>(null);
 	let activeType = $state<'tab' | 'task' | null>(null);
@@ -78,41 +67,26 @@
 		const actualTaskId = taskId.startsWith('task-') ? taskId.replace('task-', '') : taskId;
 		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(actualTaskId)));
 	}
-	function handleDragStart({ active }: DragStartEvent) {
-		console.log('[Frontend] Drag start - active.id:', active.id);
-		console.log('[Frontend] Drag start - active.data:', active.data);
-		console.log('[Frontend] Drag start - active.data.current:', active.data?.current);
-		console.log(
-			'[Frontend] Drag start - direct type check:',
-			active.data?.current?.type || active.data?.type
-		);
 
+	function handleDragStart({ active }: DragStartEvent) {
 		activeType = (active.data?.current?.type || active.data?.type) as 'tab' | 'task';
-		console.log('[Frontend] Set activeType to:', activeType);
+
 		if (activeType === 'tab') {
 			// Extract actual tab ID from prefixed ID
 			const actualTabId = (active.id as string).startsWith('tab-')
 				? (active.id as string).replace('tab-', '')
 				: active.id;
 			activeItem = tabs.find((tab) => tab.id === Number(actualTabId));
-			console.log('[Frontend] Found tab for drag overlay:', activeItem?.title || 'NOT FOUND');
 		} else if (activeType === 'task') {
 			const containingTab = findTabContainingTask(active.id as string);
-			console.log('[Frontend] Containing tab for task:', containingTab?.title || 'NOT FOUND');
 			// Extract actual task ID from prefixed ID
 			const actualTaskId = (active.id as string).startsWith('task-')
 				? (active.id as string).replace('task-', '')
 				: active.id;
 			activeItem = containingTab?.tasks?.find((task) => task.id === Number(actualTaskId));
-			console.log('[Frontend] Found task for drag overlay:', activeItem?.title || 'NOT FOUND');
 		} else {
-			console.warn('[Frontend] Unknown activeType:', activeType, 'from data:', active.data);
 			activeItem = null;
 		}
-
-		console.log('[Frontend] Final activeItem:', activeItem?.title || 'NO ITEM');
-		console.log('[Frontend] Final activeType:', activeType);
-
 		// Immediately disable scroll and keep it disabled for the entire drag operation
 		$disableScroll = true;
 	}
@@ -152,7 +126,6 @@
 				formData.append('draggedTab', JSON.stringify(tabs[newIndex]));
 				formData.append('targetIndex', newIndex.toString());
 				try {
-					console.log('[Frontend] Submitting tab reorder request');
 					const response = await fetch('?/reorderTabs', {
 						method: 'POST',
 						body: formData,
@@ -161,30 +134,18 @@
 						}
 					});
 
-					console.log('[Frontend] Tab reorder response status:', response.status);
-
 					if (response.ok) {
 						// Invalidate to sync with server data - this is crucial for tab reordering
 						await invalidateAll();
-						console.log('[Frontend] Tab reorder successful, data invalidated');
 					} else {
-						console.error('[Frontend] Tab reorder failed with status:', response.status);
 						// Revert the optimistic update if server request failed
 						const revertTabs = [...tabs];
 						const [movedTab] = revertTabs.splice(newIndex, 1);
 						revertTabs.splice(oldIndex, 0, movedTab);
 						tabs = revertTabs;
-
-						// Try to get error message from response
-						try {
-							const errorData = await response.json();
-							console.error('[Frontend] Server error details:', errorData);
-						} catch (e) {
-							console.error('[Frontend] Could not parse error response');
-						}
 					}
 				} catch (error) {
-					console.error('[Frontend] Tab reorder network/unexpected error:', error);
+					console.error('Tab reorder failed:', error);
 					// Revert the optimistic update
 					const revertTabs = [...tabs];
 					const [movedTab] = revertTabs.splice(newIndex, 1);
@@ -226,7 +187,6 @@
 					formData.append('sourceContainer', sourceTab.id.toString());
 					formData.append('targetContainer', targetTabId.toString());
 					try {
-						console.log('[Frontend] Submitting task move request');
 						const response = await fetch('?/editCategory', {
 							method: 'POST',
 							body: formData,
@@ -235,29 +195,16 @@
 							}
 						});
 
-						console.log('[Frontend] Task move response status:', response.status);
-
 						if (!response.ok) {
-							console.error('[Frontend] Task move failed with status:', response.status);
 							// Revert the optimistic update if server request failed
 							if (targetTab) {
 								targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 							}
 							sourceTab.tasks = [...(sourceTab.tasks || []), task];
 							tabs = [...tabs];
-
-							// Try to get error message from response
-							try {
-								const errorData = await response.json();
-								console.error('[Frontend] Server error details:', errorData);
-							} catch (e) {
-								console.error('[Frontend] Could not parse error response');
-							}
-						} else {
-							console.log('[Frontend] Task move successful');
 						}
 					} catch (error) {
-						console.error('[Frontend] Task move network/unexpected error:', error);
+						console.error('Task move failed:', error);
 						// Revert the optimistic update
 						if (targetTab) {
 							targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
