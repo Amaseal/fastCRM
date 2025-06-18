@@ -9,6 +9,10 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=file:./local.db
       - NEXTCLOUD_URL=${NEXTCLOUD_URL}
+      - BODY_SIZE_LIMIT=1073741824
+    labels:
+      - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=1073741824"
+      - "traefik.http.middlewares.limit.buffering.maxResponseBodyBytes=1073741824"
     volumes:
       - uploads_data:/app/static/uploads
       - db_data:/app
