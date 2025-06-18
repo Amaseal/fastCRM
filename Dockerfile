@@ -2,11 +2,10 @@
 FROM node:20-alpine AS base
 
 # Define build arguments
-ARG DATABASE_URL
 ARG NODE_ENV=production
 
-# Set environment variables from build args (only what's needed for build)
-ENV DATABASE_URL=$DATABASE_URL
+# Set environment variables (hardcode DATABASE_URL for build)
+ENV DATABASE_URL=/app/data/local.db
 ENV NODE_ENV=$NODE_ENV
 
 # Install pnpm
@@ -23,6 +22,9 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
+
+# Create data directory for build
+RUN mkdir -p /app/data
 
 # Build the application (DATABASE_URL is available from build arg)
 RUN pnpm run build
