@@ -71,7 +71,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 
 			const message =
 				`📋 **${taskData.title}**${clientInfo}\n\n` +
-				`🔗 [Skatīt uzdevumu FastCRM](${origin}/projekti)`;
+				`🔗 [Skatīt uzdevumu FastCRM](${origin}/projekti/labot/${taskData.id})`;
 
 			const payload = {
 				message: message
