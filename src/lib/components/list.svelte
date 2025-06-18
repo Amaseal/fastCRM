@@ -47,7 +47,7 @@
 		isSorting: tabIsSorting
 	} = useSortable({
 		id: tab?.id?.toString() || 'unknown',
-		data: { type: 'tab' }
+		data: { type: 'tab', tab }
 	});
 
 	// Make the card content area droppable (for accepting tasks)

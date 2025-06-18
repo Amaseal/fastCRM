@@ -223,9 +223,6 @@
 						role="button"
 						tabindex="0"
 						data-task-drag-handle="true"
-						onmousedown={(e) => e.stopPropagation()}
-						onpointerdown={(e) => e.stopPropagation()}
-						ontouchstart={(e) => e.stopPropagation()}
 					>
 						<GripVertical size="16" />
 					</div>
