@@ -5,25 +5,17 @@
 	import { horizontalDragScroll } from '$lib/horizontalScroll';
 	import { disableScroll } from '$lib/stores';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { debounce } from '$lib/utils';
+	import { dndzone, dragHandleZone } from 'svelte-dnd-action';
+	import { flip } from 'svelte/animate';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Search from '@lucide/svelte/icons/search';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import {
-		DndContext,
-		DragOverlay,
-		type DragEndEvent,
-		type DragOverEvent,
-		type DragStartEvent
-	} from '@dnd-kit-svelte/core';
-	import { SortableContext, arrayMove } from '@dnd-kit-svelte/sortable';
 	import ProjectCard from '$lib/components/project-card.svelte';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { browser } from '$app/environment';
-
 	let { data, children } = $props();
 	let tabs = $state(data.tabs);
 
@@ -33,8 +25,7 @@
 	});
 	let searchTerm = $state(page.url.searchParams.get('search') || '');
 	let managerFilter = $state(page.url.searchParams.get('manager') || '');
-	let activeItem = $state<any>(null);
-	let activeType = $state<'tab' | 'task' | null>(null);
+	let lastMovedTabId = $state<number | null>(null);
 
 	// Handle search button click and Enter key
 	const handleSearch = () => {
@@ -84,182 +75,82 @@
 			// Wait a small amount of time for the DOM to update
 		});
 	}
-	function findTabContainingTask(taskId: string) {
-		// Extract actual task ID from prefixed ID
-		const actualTaskId = taskId.startsWith('task-') ? taskId.replace('task-', '') : taskId;
-		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(actualTaskId)));
-	}
+	// svelte-dnd-action handlers for tabs
+	function handleTabsSort(e: CustomEvent) {
+		const { items, info } = e.detail;
 
-	function handleDragStart({ active }: DragStartEvent) {
-		activeType = (active.data?.current?.type || active.data?.type) as 'tab' | 'task';
-
-		if (activeType === 'tab') {
-			// Extract actual tab ID from prefixed ID
-			const actualTabId = (active.id as string).startsWith('tab-')
-				? (active.id as string).replace('tab-', '')
-				: active.id;
-			activeItem = tabs.find((tab) => tab.id === Number(actualTabId));
-		} else if (activeType === 'task') {
-			const containingTab = findTabContainingTask(active.id as string);
-			// Extract actual task ID from prefixed ID
-			const actualTaskId = (active.id as string).startsWith('task-')
-				? (active.id as string).replace('task-', '')
-				: active.id;
-			activeItem = containingTab?.tasks?.find((task) => task.id === Number(actualTaskId));
-		} else {
-			activeItem = null;
+		// Track which tab was moved for the server update
+		if (info.trigger === 'droppedIntoZone' && info.id) {
+			lastMovedTabId = info.id;
 		}
-		// Immediately disable scroll and keep it disabled for the entire drag operation
-		$disableScroll = true;
-	}
-	async function handleDragEnd({ active, over }: DragEndEvent) {
-		activeItem = null;
-		activeType = null;
-		if (!over) {
-			// For cancelled drags, re-enable scroll immediately
-			$disableScroll = false;
-			return;
+
+		tabs = items;
+
+		// Send reorder request to server only on finalize
+		if (e.type === 'finalize' && lastMovedTabId) {
+			updateTabsOrder();
 		}
-		const activeId = active.id as string;
-		const overId = over.id as string;
-		const activeDataType = active.data?.type as 'tab' | 'task';
-		const overDataType = over.data?.type as 'tab' | 'task' | 'tab-content';
+	}
+	async function updateTabsOrder() {
+		try {
+			// Find the moved tab and its new index
+			const movedTabIndex = tabs.findIndex((tab) => tab.id === lastMovedTabId);
+			if (movedTabIndex === -1) return;
 
-		if (activeDataType === 'tab' && (overDataType === 'tab' || overDataType === 'tab-content')) {
-			// Handle tab reordering - extract actual tab IDs
-			const actualActiveId = activeId.startsWith('tab-') ? activeId.replace('tab-', '') : activeId;
-			const actualOverId = overId.startsWith('tab-')
-				? overId.replace('tab-', '')
-				: overId.startsWith('tab-content-')
-					? overId.replace('tab-content-', '')
-					: overId;
+			const movedTab = tabs[movedTabIndex];
 
-			const oldIndex = tabs.findIndex((tab) => tab.id === Number(actualActiveId));
-			const newIndex = tabs.findIndex((tab) => tab.id === Number(actualOverId));
-			if (oldIndex !== newIndex) {
-				// Optimistically update the UI first for immediate feedback
-				// Create a new array instead of using arrayMove to avoid state proxy issues
-				const newTabs = [...tabs];
-				const [movedTab] = newTabs.splice(oldIndex, 1);
-				newTabs.splice(newIndex, 0, movedTab);
-				tabs = newTabs;
+			const formData = new FormData();
+			formData.append('draggedTab', JSON.stringify(movedTab));
+			formData.append('targetIndex', movedTabIndex.toString());
 
-				const formData = new FormData();
-				formData.append('draggedTab', JSON.stringify(tabs[newIndex]));
-				formData.append('targetIndex', newIndex.toString());
-				try {
-					const response = await fetch('?/reorderTabs', {
-						method: 'POST',
-						body: formData,
-						headers: {
-							'x-sveltekit-action': 'true'
-						}
-					});
-
-					if (response.ok) {
-						// Invalidate to sync with server data - this is crucial for tab reordering
-						await invalidateAll();
-					} else {
-						// Revert the optimistic update if server request failed
-						const revertTabs = [...tabs];
-						const [movedTab] = revertTabs.splice(newIndex, 1);
-						revertTabs.splice(oldIndex, 0, movedTab);
-						tabs = revertTabs;
-					}
-				} catch (error) {
-					console.error('Tab reorder failed:', error);
-					// Revert the optimistic update
-					const revertTabs = [...tabs];
-					const [movedTab] = revertTabs.splice(newIndex, 1);
-					revertTabs.splice(oldIndex, 0, movedTab);
-					tabs = revertTabs;
-				} finally {
-					// Re-enable scroll immediately - horizontal scroll will ignore events for a grace period
-					$disableScroll = false;
+			const response = await fetch('?/reorderTabs', {
+				method: 'POST',
+				body: formData,
+				headers: {
+					'x-sveltekit-action': 'true'
 				}
+			});
+
+			if (response.ok) {
+				// Invalidate to refresh flash messages and sync with server
+				await invalidateAll();
 			} else {
-				// No reordering needed, re-enable scroll immediately
-				$disableScroll = false;
+				await invalidateAll(); // Revert to server state
 			}
-		} else if (activeDataType === 'task' && overDataType === 'tab-content') {
-			// Handle task movement between tabs - extract actual IDs
-			const actualActiveId = activeId.startsWith('task-')
-				? activeId.replace('task-', '')
-				: activeId;
-			const actualOverId = overId.startsWith('tab-content-')
-				? overId.replace('tab-content-', '')
-				: overId;
-
-			const sourceTab = findTabContainingTask(activeId);
-			const targetTabId = Number(actualOverId);
-			if (sourceTab && sourceTab.id !== targetTabId) {
-				const task = sourceTab.tasks?.find((t) => t.id === Number(actualActiveId));
-
-				if (task) {
-					// Optimistically update the UI first
-					sourceTab.tasks = (sourceTab.tasks || []).filter((t) => t.id !== task.id);
-					const targetTab = tabs.find((t) => t.id === targetTabId);
-					if (targetTab) {
-						targetTab.tasks = [...(targetTab.tasks || []), task];
-					}
-					tabs = [...tabs]; // Trigger reactivity
-
-					const formData = new FormData();
-					formData.append('draggedItem', JSON.stringify(task));
-					formData.append('sourceContainer', sourceTab.id.toString());
-					formData.append('targetContainer', targetTabId.toString());
-					try {
-						const response = await fetch('?/editCategory', {
-							method: 'POST',
-							body: formData,
-							headers: {
-								'x-sveltekit-action': 'true'
-							}
-						});
-
-						if (!response.ok) {
-							// Revert the optimistic update if server request failed
-							if (targetTab) {
-								targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
-							}
-							sourceTab.tasks = [...(sourceTab.tasks || []), task];
-							tabs = [...tabs];
-						}
-					} catch (error) {
-						console.error('Task move failed:', error);
-						// Revert the optimistic update
-						if (targetTab) {
-							targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
-						}
-						sourceTab.tasks = [...(sourceTab.tasks || []), task];
-						tabs = [...tabs];
-					} finally {
-						// Re-enable scroll immediately - horizontal scroll will ignore events for a grace period
-						$disableScroll = false;
-					}
-				} else {
-					// No task found or other issue, re-enable scroll immediately
-					$disableScroll = false;
-				}
-			} else {
-				// No movement needed (same tab or other reason), re-enable scroll immediately
-				$disableScroll = false;
-			}
-		} else {
-			// No valid drop operation, re-enable scroll immediately
-			$disableScroll = false;
+		} catch (error) {
+			console.error('Tab reorder failed:', error);
+			await invalidateAll(); // Revert to server state
 		}
-	}
-	function handleDragOver({ active, over }: DragOverEvent) {
-		// Only provide visual feedback during drag over, don't modify data
-		// Data will be modified only on successful drop in handleDragEnd
-	}
-	function handleDragCancel() {
-		activeItem = null;
-		activeType = null;
+	} // Handle task movement between tabs
+	async function handleTaskMove(task: any, sourceTabId: number, targetTabId: number) {
+		if (sourceTabId === targetTabId) return;
 
-		// For cancelled drags, re-enable scroll immediately
-		$disableScroll = false;
+		const sourceTab = tabs.find((t) => t.id === sourceTabId);
+		const targetTab = tabs.find((t) => t.id === targetTabId);
+
+		if (!sourceTab || !targetTab || !task) return;
+
+		try {
+			const formData = new FormData();
+			formData.append('draggedItem', JSON.stringify(task));
+			formData.append('sourceContainer', sourceTabId.toString());
+			formData.append('targetContainer', targetTabId.toString());
+
+			const response = await fetch('?/editCategory', {
+				method: 'POST',
+				body: formData,
+				headers: {
+					'x-sveltekit-action': 'true'
+				}
+			});
+
+			// Always invalidate to refresh from server (with flash messages)
+			await invalidateAll();
+		} catch (error) {
+			console.error('Task move failed:', error);
+			// Invalidate to refresh from server state
+			await invalidateAll();
+		}
 	}
 </script>
 
@@ -316,33 +207,29 @@
 	</div>
 </header>
 
-<DndContext
-	onDragStart={handleDragStart}
-	onDragEnd={handleDragEnd}
-	onDragOver={handleDragOver}
-	onDragCancel={handleDragCancel}
+<div
+	use:horizontalDragScroll={$disableScroll}
+	use:dragHandleZone={{
+		items: tabs,
+		flipDurationMs: 300,
+		dropTargetStyle: {
+			outline: '1px solid var(--border)'
+		},
+		type: 'tabs'
+	}}
+	onconsider={handleTabsSort}
+	onfinalize={handleTabsSort}
+	class="flex h-[calc(100vh-110px)] gap-4 overflow-x-auto pb-2
+					[&::-webkit-scrollbar]:h-2
+					[&::-webkit-scrollbar]:w-1
+					[&::-webkit-scrollbar-thumb]:rounded-full
+					[&::-webkit-scrollbar-thumb]:bg-gray-300
+					dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100
+					dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
 >
-	<SortableContext items={tabs.map((tab) => `tab-${tab.id}`)}>
-		<div
-			use:horizontalDragScroll={$disableScroll}
-			class="flex h-[calc(100vh-110px)] gap-4 overflow-x-auto pb-2
-							[&::-webkit-scrollbar]:h-2
-							[&::-webkit-scrollbar]:w-1
-							[&::-webkit-scrollbar-thumb]:rounded-full
-							[&::-webkit-scrollbar-thumb]:bg-gray-300
-							dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100
-							dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
-		>
-			{#each tabs as tab (tab.id)}
-				<List {tab} {createUrlWithParams} />
-			{/each}
+	{#each tabs as tab, i (tab.id)}
+		<div animate:flip={{ duration: 300 }}>
+			<List bind:tab={tabs[i]} {createUrlWithParams} {handleTaskMove} />
 		</div>
-	</SortableContext>
-	<DragOverlay>
-		{#if activeType === 'task' && activeItem}
-			<ProjectCard task={activeItem} container={''} isDragOverlay={true} {createUrlWithParams} />
-		{:else if activeType === 'tab' && activeItem}
-			<List tab={activeItem} isDragOverlay={true} {createUrlWithParams} />
-		{/if}
-	</DragOverlay>
-</DndContext>
+	{/each}
+</div>

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { useSortable } from '@dnd-kit-svelte/sortable';
-	import { CSS, styleObjectToString } from '@dnd-kit-svelte/utilities';
 	import { formatDate, toCurrency, getDateDifference, isWorkFeasible } from '$lib/utils';
 	import Printer from '@lucide/svelte/icons/printer';
 	import User from '@lucide/svelte/icons/user';
@@ -9,10 +7,9 @@
 	import Hourglass from '@lucide/svelte/icons/hourglass';
 	import Handshake from '@lucide/svelte/icons/handshake';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
-	import { disableScroll } from '$lib/stores';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -24,10 +21,9 @@
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/stores';
 	import type { TaskWithRelations } from '$lib/types';
+	import { dragHandle } from 'svelte-dnd-action';
 	let {
 		task,
-		container,
-		isDragOverlay = false,
 		createUrlWithParams
 	}: {
 		task: TaskWithRelations;
@@ -49,27 +45,7 @@
 	function handleShareError(message: string) {
 		$flash = { type: 'error', message };
 	}
-	// Make the task sortable
-	const {
-		attributes,
-		listeners,
-		node,
-		activatorNode,
-		transform,
-		transition,
-		isDragging,
-		isSorting
-	} = useSortable({
-		id: `task-${task.id}`,
-		data: { type: 'task', task }
-	});
-	const style = $derived(
-		styleObjectToString({
-			transform: CSS.Transform.toString(transform.current),
-			transition: isSorting.current ? transition.current : undefined,
-			zIndex: isDragging.current ? 1 : undefined
-		})
-	);
+
 	let printableRef: HTMLDivElement;
 	// Calculate total cost of all products
 	function calculateProductsTotal(): number {
@@ -239,178 +215,143 @@
 	};
 </script>
 
-<div class="relative mb-2" bind:this={node.current} {style} {...attributes.current}>
-	<div class={['', { invisible: isDragging.current && !isDragOverlay }]}>
-		<Card.Root class="gap-0 p-1">
-			<Card.Header class="flex items-start justify-between p-2">
-				<div class="flex flex-col gap-0.5">
-					<Card.Title class="flex items-center gap-2 text-base">
-						{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
-							<TriangleAlert />
-						{/if}{task.title}
-					</Card.Title>
-					<Card.Description>€{formatPrice(remainingPrice())}</Card.Description>
-				</div>
+<Card.Root class="gap-0 p-1 ">
+	<Card.Header class="flex items-start justify-between p-2">
+		<a
+			class="flex w-full flex-col gap-0.5"
+			href={createUrlWithParams
+				? createUrlWithParams(`/projekti/labot/${task.id}`)
+				: `/projekti/labot/${task.id}`}
+		>
+			<Card.Title class="flex items-center gap-2 text-base">
+				{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
+					<TriangleAlert />
+				{/if}{task.title}
+			</Card.Title>
+			<Card.Description>€{formatPrice(remainingPrice())}</Card.Description>
+		</a>
 
-				<div class="flex items-center gap-2">
-					<div
-						bind:this={activatorNode.current}
-						{...listeners.current}
-						class="cursor-grab rounded p-2 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-800"
-						role="button"
-						tabindex="0"
-						data-task-drag-handle="true"
-					>
-						<GripVertical size="16" />
-					</div>
-				</div>
-			</Card.Header>
-			<Card.Content class="p-1">
-				{#if task.client}
-					<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-						<Handshake size={16} />
-						Klients:
-						<span class="font-bold text-black dark:text-white">
-							{task.client.name}
-						</span>
-					</p>
-
-					<hr class="my-2 border-gray-300" />
-				{/if}
-
+		<div
+			use:dragHandle
+			class="cursor-grab rounded p-3 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-800"
+			role="button"
+			tabindex="0"
+		>
+			<GripVertical size="16" />
+		</div>
+	</Card.Header>
+	<Card.Content class="p-1">
+		<a
+			class="flex w-full flex-col gap-0.5"
+			href={createUrlWithParams
+				? createUrlWithParams(`/projekti/labot/${task.id}`)
+				: `/projekti/labot/${task.id}`}
+		>
+			{#if task.client}
 				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-					<CalendarPlus size={16} />
-					Izveidots:
+					<Handshake size={16} />
+					Klients:
 					<span class="font-bold text-black dark:text-white">
-						{formatDate(task.created_at)}
+						{task.client.name}
 					</span>
-				</p>
-				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-					<Clock size={16} />
-					Jānodod:
-					<span class="font-bold text-black dark:text-white">
-						{task.endDate ? formatDate(task.endDate) : 'Nav norādīts'}
-					</span>
-				</p>
-				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-					<Hourglass size={16} />
-					Aktīvs:
-					<span class="font-bold text-black dark:text-white"
-						>{getDateDifference(task.created_at, new Date())}</span
-					>
 				</p>
 
 				<hr class="my-2 border-gray-300" />
+			{/if}
 
-				{#if task.responsiblePerson}
-					<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-						<User size={16} />
-						Atbildīgs:
-						<span class="font-bold text-black dark:text-white">
-							{task.responsiblePerson.name}
-						</span>
-					</p>
-					<hr class="my-2 border-gray-300" />
-				{:else}
-					<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-						<User size={16} />
-						Izveidoja:
-						<span class="font-bold text-black dark:text-white">
-							{task.manager?.name || 'Nav norādīts'}
-						</span>
-					</p>
-					<hr class="my-2 border-gray-300" />
-				{/if}
-				<div class="flex items-center justify-between">
-					<Button
-						href={createUrlWithParams
-							? createUrlWithParams(`/projekti/labot/${task.id}`)
-							: `/projekti/labot/${task.id}`}
-						variant="ghost"
-						size="sm"
-						class="justify-start"
-						onclick={() => (actionMenuOpen = false)}
-					>
-						<Pencil class="mr-2 h-4 w-4" />
-						Labot projektu
-					</Button>
-					<Popover.Root bind:open={actionMenuOpen}>
-						<Popover.Trigger
-							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-9 items-center justify-center rounded-md border px-0 py-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
-						>
-							<MoreVertical class="h-4 w-4" />
-							<span class="sr-only">Atvērt darbību izvēlni</span>
-						</Popover.Trigger>
-						<Popover.Content align="end" class="w-48 p-2">
-							<div class="space-y-1">
-								<Button
-									onclick={() => {
-										actionMenuOpen = false;
-										printComponent();
-									}}
-									variant="ghost"
-									size="sm"
-									class="w-full justify-start"
-								>
-									<Printer class="mr-2 h-4 w-4" />
-									Drukāt projektu
-								</Button>
+			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<CalendarPlus size={16} />
+				Izveidots:
+				<span class="font-bold text-black dark:text-white">
+					{formatDate(task.created_at)}
+				</span>
+			</p>
+			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<Clock size={16} />
+				Jānodod:
+				<span class="font-bold text-black dark:text-white">
+					{task.endDate ? formatDate(task.endDate) : 'Nav norādīts'}
+				</span>
+			</p>
+			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<Hourglass size={16} />
+				Aktīvs:
+				<span class="font-bold text-black dark:text-white"
+					>{getDateDifference(task.created_at, new Date())}</span
+				>
+			</p>
 
-								<Button
-									onclick={() => {
-										actionMenuOpen = false;
-										showNextcloudDialog = true;
-									}}
-									variant="ghost"
-									size="sm"
-									class="w-full justify-start"
-								>
-									<MessageSquare class="mr-2 h-4 w-4" />
-									Dalīties Talk
-								</Button>
+			<hr class="my-2 border-gray-300" />
 
-								<Separator class="my-1" />
-								<Button
-									href={createUrlWithParams
-										? createUrlWithParams(`/projekti/parvietot/${task.id}`)
-										: `/projekti/parvietot/${task.id}`}
-									variant="ghost"
-									size="sm"
-									class="w-full justify-start"
-									onclick={() => (actionMenuOpen = false)}
-								>
-									<Check class="mr-2 h-4 w-4" />
-									Atzīmēt kā pabeigtu
-								</Button>
+			{#if task.responsiblePerson}
+				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+					<User size={16} />
+					Atbildīgs:
+					<span class="font-bold text-black dark:text-white">
+						{task.responsiblePerson.name}
+					</span>
+				</p>
+				<hr class="my-2 border-gray-300" />
+			{:else}
+				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+					<User size={16} />
+					Izveidoja:
+					<span class="font-bold text-black dark:text-white">
+						{task.manager?.name || 'Nav norādīts'}
+					</span>
+				</p>
+				<hr class="my-2 border-gray-300" />
+			{/if}
+		</a>
 
-								<Button
-									href={createUrlWithParams
-										? createUrlWithParams(`/projekti/izdzest/${task.id}`)
-										: `/projekti/izdzest/${task.id}`}
-									variant="ghost"
-									size="sm"
-									class="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-									onclick={() => (actionMenuOpen = false)}
-								>
-									<Trash2 class="mr-2 h-4 w-4" />
-									Dzēst projektu
-								</Button>
-							</div>
-						</Popover.Content>
-					</Popover.Root>
-				</div>
-			</Card.Content>
-		</Card.Root>
-	</div>
-	<!-- Drag placeholder -->
-	{#if isDragging.current && !isDragOverlay}
-		<div
-			class="absolute inset-0 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-100 dark:bg-zinc-900"
-		>
-			<span class="text-sm text-zinc-200">Pārvieto: {task.title}</span>
+		<div class="flex items-center justify-between">
+			<Button
+				onclick={(e) => {
+					e.stopPropagation();
+					printComponent();
+				}}
+				variant="ghost"
+				size="sm"
+			>
+				<Printer class="mr-2 h-4 w-4" />
+			</Button>
+
+			<Button
+				onclick={(e) => {
+					e.stopPropagation();
+					showNextcloudDialog = true;
+				}}
+				variant="ghost"
+				size="sm"
+			>
+				<MessageSquare class="mr-2 h-4 w-4" />
+			</Button>
+
+			<Button
+				href={createUrlWithParams
+					? createUrlWithParams(`/projekti/parvietot/${task.id}`)
+					: `/projekti/parvietot/${task.id}`}
+				variant="ghost"
+				size="sm"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<Check class="mr-2 h-4 w-4" />
+			</Button>
+
+			<Button
+				href={createUrlWithParams
+					? createUrlWithParams(`/projekti/izdzest/${task.id}`)
+					: `/projekti/izdzest/${task.id}`}
+				variant="ghost"
+				size="sm"
+				class=" text-red-600 hover:bg-red-50 hover:text-red-700"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<Trash2 class="mr-2 h-4 w-4" />
+			</Button>
 		</div>
-	{/if}
-</div>
+	</Card.Content>
+</Card.Root>
 
 <div bind:this={printableRef} style="display: none;">
 	<PrintProject {task} />

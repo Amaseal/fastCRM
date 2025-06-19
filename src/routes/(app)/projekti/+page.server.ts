@@ -19,20 +19,12 @@ import { redirect, setFlash } from 'sveltekit-flash-message/server';
 
 export const actions = {
 	editCategory: async ({ request, cookies }) => {
-		console.log('[editCategory] Action started');
-
 		try {
 			// Parse form data
 			const formData = await request.formData();
 			const draggedItemRaw = formData.get('draggedItem');
 			const sourceTabId = formData.get('sourceContainer') as string;
 			const targetTabId = formData.get('targetContainer') as string;
-
-			console.log('[editCategory] Form data received:', {
-				draggedItemRaw: draggedItemRaw?.toString().substring(0, 100) + '...',
-				sourceTabId,
-				targetTabId
-			});
 
 			// Validate input
 			if (!draggedItemRaw || !sourceTabId || !targetTabId) {
@@ -62,12 +54,6 @@ export const actions = {
 				return fail(400, { message: 'Invalid dragged item' });
 			}
 
-			console.log('[editCategory] Processing task move:', {
-				taskId,
-				sourceTabId,
-				targetTabId
-			});
-
 			// If source and target are the same, do nothing
 			if (sourceTabId === targetTabId) {
 				console.log('[editCategory] Source and target tabs are the same, no action needed');
@@ -80,15 +66,9 @@ export const actions = {
 				.set({ tabId: parseInt(targetTabId, 10) })
 				.where(eq(task.id, Number(taskId)));
 
-			console.log('[editCategory] Database update completed for task:', taskId);
-
 			setFlash({ type: 'success', message: 'Uzdevums veiksmīgi pārvietots' }, cookies);
 			return { success: true, message: 'Task moved successfully' };
 		} catch (error) {
-			console.error('[editCategory] Unexpected error:', {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined
-			});
 			setFlash(
 				{ type: 'error', message: 'Radās neparedzēta kļūda uzdevuma pārvietošanas laikā' },
 				cookies
@@ -104,11 +84,6 @@ export const actions = {
 			const formData = await request.formData();
 			const draggedTabRaw = formData.get('draggedTab');
 			const targetIndexRaw = formData.get('targetIndex');
-
-			console.log('[reorderTabs] Form data received:', {
-				draggedTabRaw: draggedTabRaw?.toString().substring(0, 100) + '...',
-				targetIndexRaw
-			});
 
 			// Validate input
 			if (!draggedTabRaw || !targetIndexRaw) {
@@ -147,10 +122,6 @@ export const actions = {
 				setFlash({ type: 'error', message: 'Nederīgs saraksts vai mērķa pozīcija' }, cookies);
 				return fail(400, { message: 'Invalid dragged tab or target index' });
 			}
-			console.log('[reorderTabs] Processing tab reorder:', {
-				draggedTabId,
-				targetIndex
-			});
 
 			// Get only visible tabs (excluding 'done' tab) ordered by current order - same filter as in load function
 			const allTabs = await db
@@ -158,7 +129,6 @@ export const actions = {
 				.from(tab)
 				.where(ne(tab.title, 'done'))
 				.orderBy(asc(tab.order));
-			console.log('[reorderTabs] Retrieved visible tabs from database:', allTabs.length);
 
 			// Validate that the target index is within bounds
 			if (targetIndex < 0 || targetIndex >= allTabs.length) {
@@ -190,11 +160,6 @@ export const actions = {
 				return { success: true, message: 'No changes needed' };
 			}
 
-			console.log('[reorderTabs] Swapping tab orders:', {
-				draggedTab: { id: draggedTabRecord.id, currentOrder: draggedTabRecord.order },
-				targetTab: { id: targetTab.id, currentOrder: targetTab.order }
-			});
-
 			// Simply swap the order values between the two tabs
 			const draggedOrder = draggedTabRecord.order;
 			const targetOrder = targetTab.order;
@@ -203,18 +168,9 @@ export const actions = {
 			await db.update(tab).set({ order: targetOrder }).where(eq(tab.id, draggedTabRecord.id));
 			await db.update(tab).set({ order: draggedOrder }).where(eq(tab.id, targetTab.id));
 
-			console.log(
-				`[reorderTabs] Swapped orders: Tab ${draggedTabRecord.id} from ${draggedOrder} to ${targetOrder}, Tab ${targetTab.id} from ${targetOrder} to ${draggedOrder}`
-			);
-
-			console.log('[reorderTabs] Successfully reordered tabs');
 			setFlash({ type: 'success', message: 'Saraksti veiksmīgi pārkārtoti' }, cookies);
 			return { success: true, message: 'Tabs reordered successfully' };
 		} catch (error) {
-			console.error('[reorderTabs] Unexpected error:', {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined
-			});
 			setFlash(
 				{ type: 'error', message: 'Radās neparedzēta kļūda sarakstu pārkārtošanas laikā' },
 				cookies
