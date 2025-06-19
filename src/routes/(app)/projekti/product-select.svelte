@@ -100,7 +100,7 @@
 									<Command.Root>
 										<Command.Input autofocus placeholder="Meklēt produktus..." class="h-9" />
 										<Command.Empty>Šāds produkts netika atrasts!</Command.Empty>
-										<Command.Group class="custom scroll max-h-64 overflow-y-auto">
+										<Command.Group class="custom-scroll max-h-64 overflow-y-auto">
 											{#each options as product (product.value)}
 												<Command.Item
 													value={product.label}
