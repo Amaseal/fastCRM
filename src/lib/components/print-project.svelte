@@ -23,8 +23,7 @@
 	const getSelectedProducts = () => {
 		return task.taskProducts || [];
 	};
-
-	// Fix image URL to include localhost for print preview
+	// Fix image URL - use relative paths, SvelteKit will handle them correctly
 	const getImageUrl = (imagePath: string | null) => {
 		if (!imagePath) return null;
 
@@ -33,17 +32,17 @@
 			return imagePath;
 		}
 
-		// If it's a relative path starting with /uploads, add localhost
+		// If it's a relative path starting with /uploads, return as is
 		if (imagePath.startsWith('/uploads/')) {
-			return `http://localhost:5173${imagePath}`;
+			return imagePath;
 		}
 
-		// If it doesn't start with /, add it
+		// If it doesn't start with /, add /uploads/ prefix
 		if (!imagePath.startsWith('/')) {
-			return `http://localhost:5173/uploads/${imagePath}`;
+			return `/uploads/${imagePath}`;
 		}
 
-		return `http://localhost:5173${imagePath}`;
+		return imagePath;
 	};
 
 	const seamstresses = [

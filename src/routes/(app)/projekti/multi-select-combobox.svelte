@@ -106,7 +106,7 @@
 				<Command.Root class="w-full max-w-full">
 					<Command.Input autofocus placeholder="Meklēt audumu..." class="h-9" />
 					<Command.Empty>Šāds audums netika atrasts</Command.Empty>
-					<Command.Group value="clients">
+					<Command.Group value="clients" class="custom-scroll max-h-64 overflow-y-auto">
 						{#each options as material (material.value)}
 							<Command.Item
 								value={material.label}

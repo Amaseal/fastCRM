@@ -133,7 +133,10 @@
 							>
 						{/if}
 					</Command.Empty>
-					<Command.Group value="clients">
+					<Command.Group value="clients" class="custom-scroll max-h-64 overflow-y-auto">
+						{#if isSearching}
+							<Command.Item disabled>Meklē...</Command.Item>
+						{/if}
 						{#each clientOptions as client (client.value)}
 							<Command.Item
 								value={client.label}
