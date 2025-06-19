@@ -65,7 +65,7 @@
 
 	const debouncedSearch = debounce((value: string) => {
 		updateUrlAndNavigate({ search: value, page: 0 });
-	}, 300);
+	}, 1200);
 
 	// For pagination display
 	// Create a derived getter function for page numbers

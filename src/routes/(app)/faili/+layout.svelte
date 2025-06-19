@@ -60,7 +60,7 @@
 		}
 		url.searchParams.set('page', '0'); // Reset to first page on search
 		goto(url.toString());
-	}, 300);
+	}, 1200);
 
 	// Handle search input
 	const handleSearch = (event: Event) => {

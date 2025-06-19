@@ -43,7 +43,7 @@
 	// Debounce the search to avoid multiple rapid requests
 	const debouncedSearch = debounce((value: string) => {
 		updateUrlAndNavigate({ search: value });
-	}, 500);
+	}, 1200);
 
 	// Update URL and navigate to the new page
 	function updateUrlAndNavigate(params: Record<string, any>) {
