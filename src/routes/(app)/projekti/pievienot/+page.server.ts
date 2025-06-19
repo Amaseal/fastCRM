@@ -13,7 +13,7 @@ import {
 } from '$lib/server/db/schema';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { redirect } from '@sveltejs/kit';
-import { asc, inArray } from 'drizzle-orm';
+import { asc, inArray, eq } from 'drizzle-orm';
 
 export const load = async ({ url }) => {
 	const tabId = url.searchParams.get('tabId');
@@ -155,12 +155,28 @@ console.log(form.valid)
 						console.warn(`Skipping invalid product entry:`, prod);
 					}
 				}
-			}
-
-			// Associate files with the new task by updating the taskId in the files table
+			}			// Associate files with the new task by updating the taskId in the files table
 			if (files && files.length > 0) {
 				await db.update(file).set({ taskId: newTask.id }).where(inArray(file.id, files));
-			} // Return success message
+			}
+
+			// Update client's totalOrdered if client is selected and price is set
+			if (actualClientId && price && price > 0) {
+				// Get current client data
+				const currentClient = await db.query.client.findFirst({
+					where: eq(client.id, actualClientId)
+				});
+				
+				if (currentClient) {
+					const currentTotal = currentClient.totalOrdered || 0;
+					const newTotal = currentTotal + price;
+					
+					await db
+						.update(client)
+						.set({ totalOrdered: newTotal })
+						.where(eq(client.id, actualClientId));
+				}
+			}// Return success message
 			setFlash({ type: 'success', message: 'Projekts veiksmīgi izveidots!' }, cookies);
 		} catch (error) {
 			console.error('Error saving task:', error);

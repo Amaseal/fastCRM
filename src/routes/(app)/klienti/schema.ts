@@ -7,9 +7,7 @@ export const clientSchema = z.object({
 		.min(1, { message: 'Nosaukumam jābūt vismaz 1 simbolu garam' })
 		.max(100, { message: 'Nosaukumam jābūt ne vairāk kā 100 simboliem' }), email: z.string().email({ message: 'Nederīga e-pasta adrese' }).optional(),
 	phone: z.string().optional(),
-	description: z.string().optional(),
-	type: z.enum(['BTB', 'BTC']).optional().default('BTB'),
-	total_ordered: z.number().optional().default(0)
+	description: z.string().optional(),	type: z.enum(['BTB', 'BTC']).optional().default('BTB')
 }).superRefine((data, ctx) => {
 	if (!data.phone && !data.email) {
 		// Add issue to both email and phone fields

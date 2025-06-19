@@ -107,9 +107,21 @@ export const actions = {
 
 			if (!currentUser) {
 				return fail(401, { form, message: 'User not authorized' });
+			}			const taskId = Number(params.id);
+			
+			// Get the current task data to compare price changes
+			const currentTask = await db.query.task.findFirst({
+				where: eq(task.id, taskId),
+				columns: {
+					price: true,
+					clientId: true
+				}
+			});
+
+			if (!currentTask) {
+				return fail(404, { form, message: 'Task not found' });
 			}
 
-			const taskId = Number(params.id);
 			const {
 				title,
 				description,
@@ -219,7 +231,66 @@ export const actions = {
 
 				// Associate new files with the task
 				if (files.length > 0) {
-					await db.update(file).set({ taskId: taskId }).where(inArray(file.id, files));
+					await db.update(file).set({ taskId: taskId }).where(inArray(file.id, files));				}
+			}
+
+			// Handle client totalOrdered updates when price changes
+			const oldPrice = currentTask.price || 0;
+			const newPrice = price || 0;
+			const oldClientId = currentTask.clientId;
+			const newClientId = actualClientId;
+			const priceDifference = newPrice - oldPrice;
+
+			// If client hasn't changed and price has changed, update totalOrdered
+			if (oldClientId === newClientId && oldClientId && priceDifference !== 0) {
+				const currentClient = await db.query.client.findFirst({
+					where: eq(client.id, oldClientId)
+				});
+				
+				if (currentClient) {
+					const currentTotal = currentClient.totalOrdered || 0;
+					const newTotal = currentTotal + priceDifference;
+					
+					await db
+						.update(client)
+						.set({ totalOrdered: Math.max(0, newTotal) }) // Ensure it doesn't go negative
+						.where(eq(client.id, oldClientId));
+				}
+			}
+			// If client has changed, handle the totalOrdered transfer
+			else if (oldClientId !== newClientId) {
+				// Remove old price from old client
+				if (oldClientId && oldPrice > 0) {
+					const oldClient = await db.query.client.findFirst({
+						where: eq(client.id, oldClientId)
+					});
+					
+					if (oldClient) {
+						const oldCurrentTotal = oldClient.totalOrdered || 0;
+						const oldNewTotal = Math.max(0, oldCurrentTotal - oldPrice);
+						
+						await db
+							.update(client)
+							.set({ totalOrdered: oldNewTotal })
+							.where(eq(client.id, oldClientId));
+					}
+				}
+				
+				// Add new price to new client
+				if (newClientId && newPrice > 0) {
+					const newClient = await db.query.client.findFirst({
+						where: eq(client.id, newClientId)
+					});
+					
+					if (newClient) {
+						const newCurrentTotal = newClient.totalOrdered || 0;
+						const newFinalTotal = newCurrentTotal + newPrice;
+						
+						await db
+							.update(client)
+							.set({ totalOrdered: newFinalTotal })
+							.where(eq(client.id, newClientId));
+					}
 				}
 			}
 

@@ -24,8 +24,7 @@ export const actions = {
             return fail(400, { form });
         }
 
-        try {
-            await db
+        try {            await db
                 .update(client)
                 .set({
                     name: form.data.name,
