@@ -48,7 +48,7 @@
 		isDragging,
 		isSorting
 	} = useSortable({
-		id: task.id.toString(),
+		id: `task-${task.id}`,
 		data: { type: 'task', task }
 	});
 	const style = $derived(
@@ -222,6 +222,7 @@
 						class="cursor-grab rounded p-2 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-800"
 						role="button"
 						tabindex="0"
+						data-task-drag-handle="true"
 					>
 						<GripVertical size="16" />
 					</div>

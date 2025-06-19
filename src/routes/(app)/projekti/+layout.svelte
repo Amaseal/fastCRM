@@ -19,9 +19,12 @@
 	} from '@dnd-kit-svelte/core';
 	import { SortableContext, arrayMove } from '@dnd-kit-svelte/sortable';
 	import ProjectCard from '$lib/components/project-card.svelte';
+	import { getFlash } from 'sveltekit-flash-message';
+
 	let { data, children } = $props();
 	let tabs = $state(data.tabs);
 
+	const flash = getFlash(page);
 	$effect(() => {
 		tabs = data.tabs;
 	});
@@ -60,18 +63,30 @@
 		});
 	}
 	function findTabContainingTask(taskId: string) {
-		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(taskId)));
+		// Extract actual task ID from prefixed ID
+		const actualTaskId = taskId.startsWith('task-') ? taskId.replace('task-', '') : taskId;
+		return tabs.find((tab) => tab.tasks?.some((task) => task.id === Number(actualTaskId)));
 	}
+
 	function handleDragStart({ active }: DragStartEvent) {
-		activeType = active.data?.type as 'tab' | 'task';
+		activeType = (active.data?.current?.type || active.data?.type) as 'tab' | 'task';
 
 		if (activeType === 'tab') {
-			activeItem = tabs.find((tab) => tab.id === Number(active.id));
+			// Extract actual tab ID from prefixed ID
+			const actualTabId = (active.id as string).startsWith('tab-')
+				? (active.id as string).replace('tab-', '')
+				: active.id;
+			activeItem = tabs.find((tab) => tab.id === Number(actualTabId));
 		} else if (activeType === 'task') {
 			const containingTab = findTabContainingTask(active.id as string);
-			activeItem = containingTab?.tasks?.find((task) => task.id === Number(active.id));
+			// Extract actual task ID from prefixed ID
+			const actualTaskId = (active.id as string).startsWith('task-')
+				? (active.id as string).replace('task-', '')
+				: active.id;
+			activeItem = containingTab?.tasks?.find((task) => task.id === Number(actualTaskId));
+		} else {
+			activeItem = null;
 		}
-
 		// Immediately disable scroll and keep it disabled for the entire drag operation
 		$disableScroll = true;
 	}
@@ -83,15 +98,22 @@
 			$disableScroll = false;
 			return;
 		}
-
 		const activeId = active.id as string;
 		const overId = over.id as string;
 		const activeDataType = active.data?.type as 'tab' | 'task';
 		const overDataType = over.data?.type as 'tab' | 'task' | 'tab-content';
+
 		if (activeDataType === 'tab' && (overDataType === 'tab' || overDataType === 'tab-content')) {
-			// Handle tab reordering
-			const oldIndex = tabs.findIndex((tab) => tab.id === Number(activeId));
-			const newIndex = tabs.findIndex((tab) => tab.id === Number(overId));
+			// Handle tab reordering - extract actual tab IDs
+			const actualActiveId = activeId.startsWith('tab-') ? activeId.replace('tab-', '') : activeId;
+			const actualOverId = overId.startsWith('tab-')
+				? overId.replace('tab-', '')
+				: overId.startsWith('tab-content-')
+					? overId.replace('tab-content-', '')
+					: overId;
+
+			const oldIndex = tabs.findIndex((tab) => tab.id === Number(actualActiveId));
+			const newIndex = tabs.findIndex((tab) => tab.id === Number(actualOverId));
 			if (oldIndex !== newIndex) {
 				// Optimistically update the UI first for immediate feedback
 				// Create a new array instead of using arrayMove to avoid state proxy issues
@@ -103,7 +125,6 @@
 				const formData = new FormData();
 				formData.append('draggedTab', JSON.stringify(tabs[newIndex]));
 				formData.append('targetIndex', newIndex.toString());
-
 				try {
 					const response = await fetch('?/reorderTabs', {
 						method: 'POST',
@@ -112,6 +133,7 @@
 							'x-sveltekit-action': 'true'
 						}
 					});
+
 					if (response.ok) {
 						// Invalidate to sync with server data - this is crucial for tab reordering
 						await invalidateAll();
@@ -138,11 +160,18 @@
 				$disableScroll = false;
 			}
 		} else if (activeDataType === 'task' && overDataType === 'tab-content') {
-			// Handle task movement between tabs
+			// Handle task movement between tabs - extract actual IDs
+			const actualActiveId = activeId.startsWith('task-')
+				? activeId.replace('task-', '')
+				: activeId;
+			const actualOverId = overId.startsWith('tab-content-')
+				? overId.replace('tab-content-', '')
+				: overId;
+
 			const sourceTab = findTabContainingTask(activeId);
-			const targetTabId = Number(overId);
+			const targetTabId = Number(actualOverId);
 			if (sourceTab && sourceTab.id !== targetTabId) {
-				const task = sourceTab.tasks?.find((t) => t.id === Number(activeId));
+				const task = sourceTab.tasks?.find((t) => t.id === Number(actualActiveId));
 
 				if (task) {
 					// Optimistically update the UI first
@@ -157,7 +186,6 @@
 					formData.append('draggedItem', JSON.stringify(task));
 					formData.append('sourceContainer', sourceTab.id.toString());
 					formData.append('targetContainer', targetTabId.toString());
-
 					try {
 						const response = await fetch('?/editCategory', {
 							method: 'POST',
@@ -166,6 +194,7 @@
 								'x-sveltekit-action': 'true'
 							}
 						});
+
 						if (!response.ok) {
 							// Revert the optimistic update if server request failed
 							if (targetTab) {
@@ -175,7 +204,8 @@
 							tabs = [...tabs];
 						}
 					} catch (error) {
-						console.error('Task move failed:', error); // Revert the optimistic update
+						console.error('Task move failed:', error);
+						// Revert the optimistic update
 						if (targetTab) {
 							targetTab.tasks = (targetTab.tasks || []).filter((t) => t.id !== task.id);
 						}
@@ -245,7 +275,7 @@
 	onDragOver={handleDragOver}
 	onDragCancel={handleDragCancel}
 >
-	<SortableContext items={tabs.map((tab) => tab.id.toString())}>
+	<SortableContext items={tabs.map((tab) => `tab-${tab.id}`)}>
 		<div
 			use:horizontalDragScroll={$disableScroll}
 			class="flex h-[calc(100vh-110px)] gap-4 overflow-x-auto pb-2
@@ -261,7 +291,6 @@
 			{/each}
 		</div>
 	</SortableContext>
-
 	<DragOverlay>
 		{#if activeType === 'task' && activeItem}
 			<ProjectCard task={activeItem} container={''} isDragOverlay={true} />

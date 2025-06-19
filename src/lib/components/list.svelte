@@ -46,13 +46,12 @@
 		isDragging: tabIsDragging,
 		isSorting: tabIsSorting
 	} = useSortable({
-		id: tab?.id?.toString() || 'unknown',
-		data: { type: 'tab' }
+		id: `tab-${tab?.id}` || 'unknown',
+		data: { type: 'tab', tab }
 	});
 
-	// Make the card content area droppable (for accepting tasks)
 	const { node: droppableNode, isOver } = useDroppable({
-		id: tab?.id?.toString() || 'unknown',
+		id: `tab-content-${tab?.id}` || 'unknown',
 		data: { type: 'tab-content', accepts: ['task'] }
 	});
 	const tabStyle = $derived(
@@ -103,7 +102,7 @@
 						: ''}"
 					bind:this={droppableNode.current}
 				>
-					<SortableContext items={tab?.tasks?.map((task: Task) => task.id.toString()) || []}>
+					<SortableContext items={tab?.tasks?.map((task: Task) => `task-${task.id}`) || []}>
 						{#if !tab?.tasks || tab.tasks.length === 0}
 							<div
 								class="flex h-full w-full items-center justify-center text-gray-500 dark:text-gray-400"

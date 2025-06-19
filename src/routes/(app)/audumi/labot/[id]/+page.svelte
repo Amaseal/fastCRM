@@ -89,7 +89,7 @@
 </script>
 
 <svelte:head>
-	<title>Pievienot audumu</title>
+	<title>Labot {data.item.title}</title>
 </svelte:head>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -102,7 +102,7 @@
 					><X /></a
 				>
 
-				<h2 class="mb-2 text-lg font-semibold">Pievienot jaunu audumu</h2>
+				<h2 class="mb-2 text-lg font-semibold">Labot {data.item.title}</h2>
 			</Card.Header>
 			<Card.Content class="p-6">
 				<form method="POST" use:enhance>
