@@ -23,7 +23,16 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/stores';
-	let { task, container, isDragOverlay = false } = $props();
+	import type { TaskWithRelations } from '$lib/types';
+	let {
+		task,
+		container,
+		isDragOverlay = false
+	}: {
+		task: TaskWithRelations;
+		container?: any;
+		isDragOverlay?: boolean;
+	} = $props();
 	let showNextcloudDialog = $state(false);
 	let actionMenuOpen = $state(false);
 	const flash = getFlash(page);
@@ -59,8 +68,30 @@
 			zIndex: isDragging.current ? 1 : undefined
 		})
 	);
-
 	let printableRef: HTMLDivElement;
+	// Calculate total cost of all products
+	function calculateProductsTotal(): number {
+		let total = 0;
+		(task.taskProducts || []).forEach((taskProduct) => {
+			if (taskProduct.product && taskProduct.count && taskProduct.count > 0) {
+				total += taskProduct.product.cost * taskProduct.count;
+			}
+		});
+		return total;
+	}
+
+	// Calculate remaining price (task price minus products cost)
+	let remainingPrice = $derived(() => {
+		const taskPrice = task.price || 0;
+		const productsTotal = calculateProductsTotal();
+		return taskPrice - productsTotal;
+	});
+
+	// Format price for display (assuming cost is in cents, convert to euros)
+	function formatPrice(priceInCents: number): string {
+		return (priceInCents / 100).toFixed(2);
+	}
+
 	const printComponent = (): void => {
 		if (!printableRef) return;
 
@@ -211,12 +242,12 @@
 		<Card.Root class="gap-0 p-1">
 			<Card.Header class="flex items-center justify-between p-2">
 				<Card.Title class="flex items-center gap-2 text-base">
-					{#if isWorkFeasible(task.endDate, task.count)}
+					{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
 						<TriangleAlert />
 					{/if}{task.title}
 				</Card.Title>
 				<div class="flex items-center gap-2">
-					<Card.Description>{toCurrency(task.price)} &#8364</Card.Description>
+					<Card.Description>€{formatPrice(remainingPrice())}</Card.Description>
 					<div
 						bind:this={activatorNode.current}
 						{...listeners.current}
@@ -253,7 +284,7 @@
 					<Clock size={16} />
 					Jānodod:
 					<span class="font-bold text-black dark:text-white">
-						{formatDate(task.endDate)}
+						{task.endDate ? formatDate(task.endDate) : 'Nav norādīts'}
 					</span>
 				</p>
 				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
@@ -280,7 +311,7 @@
 						<User size={16} />
 						Izveidoja:
 						<span class="font-bold text-black dark:text-white">
-							{task.manager.name}
+							{task.manager?.name || 'Nav norādīts'}
 						</span>
 					</p>
 					<hr class="my-2 border-gray-300" />

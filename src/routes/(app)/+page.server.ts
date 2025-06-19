@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { task, user, client, notification } from '$lib/server/db/schema';
+import { task, user, client, notification, taskProduct, product } from '$lib/server/db/schema';
 import { sql, count, sum, desc, eq, and, or, lte, gte } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
@@ -91,17 +91,34 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(client)
 		.where(sql`${client.totalOrdered} > 0`)
 		.orderBy(desc(client.totalOrdered))
-		.limit(5); // Get all monthly profit data (not limited to 6 months for the query)
+		.limit(5);	// Get all monthly profit data with product costs subtracted
 	const monthlyProfits = await db
 		.select({
 			month: sql<string>`strftime('%Y-%m', datetime(${task.created_at}, 'unixepoch'))`,
-			profit: sum(task.price)
+			taskId: task.id,
+			taskPrice: task.price,
+			productCost: sql<number>`COALESCE(SUM(${taskProduct.count} * ${product.cost}), 0)`
 		})
 		.from(task)
+		.leftJoin(taskProduct, eq(task.id, taskProduct.taskId))
+		.leftJoin(product, eq(taskProduct.productId, product.id))
 		.where(sql`${task.price} IS NOT NULL`)
-		.groupBy(sql`strftime('%Y-%m', datetime(${task.created_at}, 'unixepoch'))`)
+		.groupBy(
+			task.id, 
+			task.price, 
+			sql`strftime('%Y-%m', datetime(${task.created_at}, 'unixepoch'))`
+		)
 		.orderBy(sql`strftime('%Y-%m', datetime(${task.created_at}, 'unixepoch'))`);
-	// Create array of last 12 months with zero values as default
+
+	// Calculate profit by month (task price - product costs)
+	const monthlyProfitSums = monthlyProfits.reduce((acc, item) => {
+		const profit = (item.taskPrice || 0) - (item.productCost || 0);
+		if (!acc[item.month]) {
+			acc[item.month] = 0;
+		}
+		acc[item.month] += profit;
+		return acc;
+	}, {} as Record<string, number>);	// Create array of last 12 months with zero values as default
 	const chartData = [];
 	for (let i = 11; i >= 0; i--) {
 		const date = new Date();
@@ -109,30 +126,39 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const monthStr = date.toISOString().slice(0, 7); // YYYY-MM format
 
 		// Find if we have data for this month
-		const monthData = monthlyProfits.find((item) => item.month === monthStr);
+		const monthProfit = monthlyProfitSums[monthStr] || 0;
 
 		chartData.push({
 			month: monthStr,
-			profit: Number(monthData?.profit) || 0
+			profit: monthProfit
 		});
 	}
-
-	// Calculate total profit for current month
-	const currentMonthProfit = await db
+	// Calculate profit for current month (task prices - product costs)
+	const currentMonthTasks = await db
 		.select({
-			total: sum(task.price)
+			taskId: task.id,
+			taskPrice: task.price,
+			productCost: sql<number>`COALESCE(SUM(${taskProduct.count} * ${product.cost}), 0)`
 		})
 		.from(task)
+		.leftJoin(taskProduct, eq(task.id, taskProduct.taskId))
+		.leftJoin(product, eq(taskProduct.productId, product.id))
 		.where(
 			sql`${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)} AND ${task.price} IS NOT NULL`
-		);
-	return {
+		)
+		.groupBy(task.id, task.price);
+
+	// Calculate total profit for current month
+	const currentMonthProfit = currentMonthTasks.reduce((total, taskData) => {
+		const profit = (taskData.taskPrice || 0) - (taskData.productCost || 0);
+		return total + profit;
+	}, 0);	return {
 		topManagers: topManagers.filter((manager) => manager.taskCount > 0),
 		topResponsiblePersons: topResponsiblePersons.filter((person) => person.taskCount > 0),
 		bestClients: bestClients.filter((client) => client.totalOrdered),
 		urgentTasks,
 		userNotifications,
 		chartData,
-		currentMonthProfit: currentMonthProfit[0]?.total || 0
+		currentMonthProfit: currentMonthProfit
 	};
 };
