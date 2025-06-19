@@ -46,10 +46,11 @@
 
 	// Format currency
 	function formatCurrency(amount: number) {
+		let number = amount / 100;
 		return new Intl.NumberFormat('lv-LV', {
 			style: 'currency',
 			currency: 'EUR'
-		}).format(amount);
+		}).format(number);
 	}
 
 	// Format date
