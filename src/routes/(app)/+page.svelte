@@ -28,7 +28,7 @@
 	const chartData = $derived(
 		data.chartData.map((item, index) => ({
 			month: formatMonth(item.month),
-			profit: Number(item.profit) || 0
+			profit: Number(item.profit) / 100 || 0
 		}))
 	);
 
