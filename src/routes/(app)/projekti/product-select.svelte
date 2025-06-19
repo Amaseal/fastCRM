@@ -15,6 +15,7 @@
 	interface Product {
 		id: number;
 		title: string;
+		description?: string;
 		cost: number;
 	}
 
@@ -45,9 +46,10 @@
 			$formData.taskProducts = $formData.taskProducts.filter((_, i) => i !== index);
 		}
 	}
-	const options = products.map(({ id, title }: Product) => ({
+	const options = products.map(({ id, title, description }: Product) => ({
 		value: id,
-		label: title
+		label: title,
+		description: description || ''
 	})); // Calculate total price based on selected products and counts
 	function calculateTotalPrice(): number {
 		let total = 0;
@@ -80,7 +82,7 @@
 								<Popover.Trigger
 									class={cn(
 										buttonVariants({ variant: 'outline' }),
-										'w-full justify-between',
+										'w-full justify-between text-left',
 										(!entry.productId || entry.productId === 0) && 'text-muted-foreground'
 									)}
 									role="combobox"
@@ -89,11 +91,21 @@
 										touchedProducts = new Set(touchedProducts);
 									}}
 								>
-									{entry.productId === 0
-										? 'Izvēlies produktu'
-										: (options.find((f) => f.value === entry.productId)?.label ??
-											'Izvēlies produktu')}
-									<ChevronsUpDownIcon class="opacity-50" />
+									<div class="flex items-center gap-2 text-left">
+										{#if entry.productId === 0}
+											<span>Izvēlies produktu</span>
+										{:else}
+											{@const selectedOption = options.find((f) => f.value === entry.productId)}
+											<span class="font-medium">{selectedOption?.label || 'Izvēlies produktu'}</span
+											>
+											{#if selectedOption?.description}
+												<span class="text-muted-foreground font-medium"
+													>{selectedOption.description}</span
+												>
+											{/if}
+										{/if}
+									</div>
+									<ChevronsUpDownIcon class="shrink-0 opacity-50" />
 								</Popover.Trigger>
 								<input hidden value={entry.productId} name={props.name} />
 								<Popover.Content class="w-[300px] p-0">
@@ -103,20 +115,28 @@
 										<Command.Group class="custom-scroll max-h-64 overflow-y-auto">
 											{#each options as product (product.value)}
 												<Command.Item
-													value={product.label}
+													value={`${product.label} ${product.description}`}
 													onSelect={() => {
 														$formData.taskProducts[index].productId = Number(product.value);
 														touchedProducts.add(index);
 														touchedProducts = new Set(touchedProducts);
 													}}
+													class="flex items-start gap-1 py-2"
 												>
-													{product.label}
-													<CheckIcon
-														class={cn(
-															'ml-auto',
-															product.value !== entry.productId && 'text-transparent'
-														)}
-													/>
+													<div class="flex w-full items-center justify-between gap-2">
+														<span class="font-medium">{product.label}</span>
+														{#if product.description}
+															<span class="text-muted-foreground text-xs"
+																>{product.description}</span
+															>
+														{/if}
+														<CheckIcon
+															class={cn(
+																'ml-auto shrink-0',
+																product.value !== entry.productId && 'text-transparent'
+															)}
+														/>
+													</div>
 												</Command.Item>
 											{/each}
 										</Command.Group>
