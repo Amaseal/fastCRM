@@ -3,8 +3,7 @@ export function horizontalDragScroll(node: HTMLElement, disabled: boolean) {
 	let startX: number;
 	let scrollLeft: number;
 	let ignoreEventsUntil = 0; // Timestamp to ignore events until
-	
-	const handleMouseDown = (e: MouseEvent) => {
+		const handleMouseDown = (e: MouseEvent) => {
 		if (disabled) return;
 		if (Date.now() < ignoreEventsUntil) {
 			e.stopPropagation();
@@ -13,6 +12,7 @@ export function horizontalDragScroll(node: HTMLElement, disabled: boolean) {
 		}
 		
 		// Check if the click target or any parent has drag-related attributes or classes
+		// Also check for popover, dialog, dropdown, and other overlay components
 		let target = e.target as HTMLElement;
 		while (target && target !== node) {
 			// Check for drag-related attributes or classes
@@ -25,6 +25,25 @@ export function horizontalDragScroll(node: HTMLElement, disabled: boolean) {
 				// This is a drag handle or drag area, don't activate horizontal scroll
 				return;
 			}
+			
+			// Check for popover, dialog, dropdown, and other overlay components
+			if (target.closest('[data-bits-popover-content]') ||
+				target.closest('[data-bits-dialog-content]') ||
+				target.closest('[data-bits-dropdown-menu-content]') ||
+				target.closest('[data-bits-select-content]') ||
+				target.closest('[data-bits-command-content]') ||
+				target.closest('[role="dialog"]') ||
+				target.closest('[role="listbox"]') ||
+				target.closest('[role="combobox"]') ||
+				target.closest('.popover') ||
+				target.closest('.dropdown') ||
+				target.closest('.dialog') ||
+				target.closest('.select-content') ||
+				target.closest('.command-content')) {
+				// This is part of an overlay component, don't interfere
+				return;
+			}
+			
 			target = target.parentElement as HTMLElement;
 		}
 		
@@ -43,20 +62,18 @@ export function horizontalDragScroll(node: HTMLElement, disabled: boolean) {
 			node.style.userSelect = '';
 		}
 	};
-
 	const handleMouseUp = (e: MouseEvent) => {
 		if (disabled || Date.now() < ignoreEventsUntil) return;
-		e.stopPropagation(); // Prevent event bubbling
 		if (isDragging) {
+			e.stopPropagation(); // Only prevent bubbling if we were actually dragging
 			isDragging = false;
 			node.style.cursor = 'e-resize';
 			node.style.userSelect = '';
 		}
 	};
-
 	const handleMouseMove = (e: MouseEvent) => {
 		if (disabled || !isDragging || Date.now() < ignoreEventsUntil) return;
-		e.stopPropagation(); // Prevent event bubbling
+		e.stopPropagation(); // Prevent event bubbling only when actively dragging
 		const x = e.pageX - node.offsetLeft;
 		const walk = (x - startX) * 1;
 		node.scrollLeft = scrollLeft - walk;

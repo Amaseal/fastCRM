@@ -11,6 +11,7 @@
 	import { useId } from 'bits-ui';
 	import { CheckIcon, ChevronsUpDownIcon, X } from '@lucide/svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { onMount } from 'svelte';
 
 	interface Option {
 		value: string;
@@ -30,6 +31,7 @@
 	}>();
 	let formData = form.form;
 	let popoverOpen = $state(false);
+	let containerRef: HTMLDivElement;
 
 	let selectedMaterials = $state([]) as string[];
 	$effect(() => {
@@ -44,6 +46,7 @@
 		label: title,
 		remaining: remaining
 	}));
+
 	function toggleMaterial(id: string) {
 		if (selectedMaterials.includes(id)) {
 			selectedMaterials = selectedMaterials.filter((cid) => cid !== id);
@@ -55,9 +58,27 @@
 		// Close popover after selection
 		popoverOpen = false;
 	}
+
+	// Handle click outside to close popover
+	function handleClickOutside(event: MouseEvent) {
+		if (!popoverOpen) return;
+
+		const target = event.target as HTMLElement;
+		// Check if click is outside the popover container
+		if (containerRef && !containerRef.contains(target)) {
+			popoverOpen = false;
+		}
+	}
+
+	onMount(() => {
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	});
 </script>
 
-<div class="relative">
+<div class="relative" bind:this={containerRef}>
 	<Form.Field {form} name="materialIds" class="flex w-full flex-col">
 		<Popover.Root bind:open={popoverOpen}>
 			<Form.Control id={triggerId}>

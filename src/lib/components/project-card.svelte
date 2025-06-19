@@ -25,6 +25,7 @@
 	import { page } from '$app/stores';
 	let { task, container, isDragOverlay = false } = $props();
 	let showNextcloudDialog = $state(false);
+	let actionMenuOpen = $state(false);
 	const flash = getFlash(page);
 
 	// Handle successful share to Nextcloud Talk
@@ -290,11 +291,12 @@
 						variant="ghost"
 						size="sm"
 						class="justify-start"
+						onclick={() => (actionMenuOpen = false)}
 					>
 						<Pencil class="mr-2 h-4 w-4" />
 						Labot projektu
 					</Button>
-					<Popover.Root>
+					<Popover.Root bind:open={actionMenuOpen}>
 						<Popover.Trigger
 							class="border-input bg-background ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex h-9 w-9 items-center justify-center rounded-md border px-0 py-0 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
 						>
@@ -304,7 +306,10 @@
 						<Popover.Content align="end" class="w-48 p-2">
 							<div class="space-y-1">
 								<Button
-									onclick={printComponent}
+									onclick={() => {
+										actionMenuOpen = false;
+										printComponent();
+									}}
 									variant="ghost"
 									size="sm"
 									class="w-full justify-start"
@@ -315,6 +320,7 @@
 
 								<Button
 									onclick={() => {
+										actionMenuOpen = false;
 										showNextcloudDialog = true;
 									}}
 									variant="ghost"
@@ -332,6 +338,7 @@
 									variant="ghost"
 									size="sm"
 									class="w-full justify-start"
+									onclick={() => (actionMenuOpen = false)}
 								>
 									<Check class="mr-2 h-4 w-4" />
 									Atzīmēt kā pabeigtu
@@ -342,6 +349,7 @@
 									variant="ghost"
 									size="sm"
 									class="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+									onclick={() => (actionMenuOpen = false)}
 								>
 									<Trash2 class="mr-2 h-4 w-4" />
 									Dzēst projektu
