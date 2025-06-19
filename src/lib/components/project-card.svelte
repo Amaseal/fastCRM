@@ -240,14 +240,17 @@
 <div class="relative mb-2" bind:this={node.current} {style} {...attributes.current}>
 	<div class={['', { invisible: isDragging.current && !isDragOverlay }]}>
 		<Card.Root class="gap-0 p-1">
-			<Card.Header class="flex items-center justify-between p-2">
-				<Card.Title class="flex items-center gap-2 text-base">
-					{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
-						<TriangleAlert />
-					{/if}{task.title}
-				</Card.Title>
-				<div class="flex items-center gap-2">
+			<Card.Header class="flex items-start justify-between p-2">
+				<div class="flex flex-col gap-0.5">
+					<Card.Title class="flex items-center gap-2 text-base">
+						{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
+							<TriangleAlert />
+						{/if}{task.title}
+					</Card.Title>
 					<Card.Description>€{formatPrice(remainingPrice())}</Card.Description>
+				</div>
+
+				<div class="flex items-center gap-2">
 					<div
 						bind:this={activatorNode.current}
 						{...listeners.current}
