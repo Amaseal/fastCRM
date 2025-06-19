@@ -13,28 +13,28 @@ export const load = async ({ params }) => {
 }
 
 export const actions = {
-    default: async ({ params, fetch, cookies }) => {
+    default: async ({ params, fetch, cookies, url }) => {
         try {
             const taskId = Number(params.id);
             
             // Get the task to find the image path
             const item = await db.query.task.findFirst({
                 where: eq(task.id, taskId)
-            });
-
-            if (!item) {
+            });            if (!item) {
                 setFlash({ type: 'error', message: "Projekts netika atrasts!" }, cookies);
-                redirect(303, '/projekti');
+                const searchParams = url.searchParams.toString();
+                const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+                redirect(303, redirectUrl);
             }
 
             // Find the "done" tab
             const doneTab = await db.query.tab.findFirst({
                 where: eq(tab.title, 'done')
-            });
-
-            if (!doneTab) {
+            });            if (!doneTab) {
                 setFlash({ type: 'error', message: "Sistēmas kļūda - nevar atrast 'done' sarakstu!" }, cookies);
-                redirect(303, '/projekti');
+                const searchParams = url.searchParams.toString();
+                const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+                redirect(303, redirectUrl);
             }
 
             // Delete preview image if it exists
@@ -93,13 +93,16 @@ export const actions = {
                     preview: null // Clear the preview since we deleted it
                 })
                 .where(eq(task.id, taskId));
-            
-        } catch (error) {
+              } catch (error) {
             console.error('Error moving task to done:', error);
             setFlash({ type: 'error', message: "Kļūda pārvietojot projektu!" }, cookies);
-            redirect(303, '/projekti');
+            const searchParams = url.searchParams.toString();
+            const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+            redirect(303, redirectUrl);
         }
         setFlash({ type: 'success', message: "Projekts veiksmīgi pārvietots uz pabeigto!" }, cookies);
-        redirect(303, '/projekti');
+        const searchParams = url.searchParams.toString();
+        const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+        redirect(303, redirectUrl);
     }
 };

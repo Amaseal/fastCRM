@@ -48,7 +48,7 @@ export const load = async ({ url }) => {
 };
 
 export const actions = {
-	default: async ({ request, cookies, locals }) => {
+	default: async ({ request, cookies, locals, url }) => {
 		// Validate the form data with superforms
 		const form = await superValidate(request, zod(taskSchema));
 console.log(form.valid)
@@ -176,14 +176,23 @@ console.log(form.valid)
 						.set({ totalOrdered: newTotal })
 						.where(eq(client.id, actualClientId));
 				}
-			}// Return success message
-			setFlash({ type: 'success', message: 'Projekts veiksmīgi izveidots!' }, cookies);
-		} catch (error) {
-			console.error('Error saving task:', error);
-			return fail(500, { form, message: 'Internal server error' });
-		}
+			}		// Return success message
+		setFlash({ type: 'success', message: 'Projekts veiksmīgi izveidots!' }, cookies);
+	} catch (error) {
+		console.error('Error saving task:', error);
+		return fail(500, { form, message: 'Internal server error' });
+	}
 
-		// Redirect after successful completion (outside try/catch)
-		redirect(303, '/projekti');
+	// Preserve search parameters in redirect
+	const searchParams = new URLSearchParams();
+	if (url.searchParams.get('search')) {
+		searchParams.set('search', url.searchParams.get('search')!);
+	}
+	if (url.searchParams.get('manager')) {
+		searchParams.set('manager', url.searchParams.get('manager')!);
+	}
+	
+	const redirectUrl = `/projekti${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+	redirect(303, redirectUrl);
 	}
 };

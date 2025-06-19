@@ -13,13 +13,14 @@ export const load = async ({ params }) => {
 };
 
 export const actions = {
-	default: async ({ params, cookies }) => {
+	default: async ({ params, cookies, url }) => {
 		try {
 			await db.delete(tab).where(eq(tab.id, Number(params.id)));
 		} catch (error) {
-			console.error('Error deleting client:', error);
-		}
+			console.error('Error deleting client:', error);		}
 		setFlash({ type: 'success', message: 'Veiksmīgi izdzēsts!' }, cookies);
-		redirect(303, '/projekti');
+		const searchParams = url.searchParams.toString();
+		const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+		redirect(303, redirectUrl);
 	}
 };

@@ -23,6 +23,7 @@
 	import NumberInput from '$lib/components/ui/input/number-input.svelte';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { page } from '$app/state';
+	import { page as pageStore } from '$app/stores';
 	import type { Client, Material, Product, Task, User } from '$lib/server/db/schema';
 	import ClientSelect from '../../client-select.svelte';
 	import MultiSelectCombobox from '../../multi-select-combobox.svelte';
@@ -79,7 +80,6 @@
 		}
 	});
 	let placeholder = $state<DateValue>(today(getLocalTimeZone()));
-
 	const seamstresses = [
 		{ value: 'Ikšķile', label: 'Ikšķile' },
 		{ value: 'Pie mums', label: 'Pie mums' },
@@ -87,6 +87,13 @@
 		{ value: 'Lielvārde', label: 'Lielvārde' },
 		{ value: 'Pagrabs', label: 'Pagrabs' }
 	];
+
+	// Create URL with preserved search parameters
+	const backUrl = $derived(
+		$pageStore.url.searchParams.toString()
+			? `/projekti?${$pageStore.url.searchParams.toString()}`
+			: '/projekti'
+	);
 </script>
 
 <svelte:head>
@@ -100,7 +107,7 @@
 		>
 			<Card.Header>
 				<a
-					href="/projekti"
+					href={backUrl}
 					class="text-muted-foreground hover:text-foreground absolute top-7 right-5 text-sm font-medium transition-colors"
 					><X /></a
 				>

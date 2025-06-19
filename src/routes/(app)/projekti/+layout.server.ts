@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { task, tab, client, material, product } from '$lib/server/db/schema';
+import { task, tab, client, material, product, user } from '$lib/server/db/schema';
 import { asc, eq, and, or, sql, ne } from 'drizzle-orm';
 import { superValidate } from 'sveltekit-superforms';
 import { taskSchema } from './schema';
@@ -39,7 +39,6 @@ export const load = async ({ url, locals }) => {
 			)
 		);
 	}
-
 	if (managerFilter) {
 		taskConditions.push(eq(task.managerId, managerFilter));
 	}
@@ -75,8 +74,12 @@ export const load = async ({ url, locals }) => {
 		where: ne(tab.title, 'done'),
 		orderBy: [asc(tab.order)]
 	})) as TabWithRelations[];
-
 	const tabsWithTasks = groupTasksByTab(tasks, tabs);
+
+	// Get all users for manager filtering
+	const users = await db.query.user.findMany({
+		orderBy: [asc(user.name)]
+	});
 
 	// Group tabs by their tags
 
@@ -84,6 +87,7 @@ export const load = async ({ url, locals }) => {
 
 	return {
 		tabs: tabsWithTasks,
-		taskForm
+		taskForm,
+		users
 	};
 };

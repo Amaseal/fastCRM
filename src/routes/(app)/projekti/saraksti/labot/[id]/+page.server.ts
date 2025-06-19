@@ -20,7 +20,7 @@ export const load = async ({ params }) => {
 };
 
 export const actions = {
-	default: async ({ request, cookies, params }) => {
+	default: async ({ request, cookies, params, url }) => {
 		const form = await superValidate(request, zod(tabSchema));
 
 		if (!form.valid) {
@@ -36,9 +36,10 @@ export const actions = {
 				})
 				.where(eq(tab.id, Number(params.id)));
 		} catch (error) {
-			return fail(500, { form, message: 'Neizdevās izveidot sarakstu.' });
-		}
+			return fail(500, { form, message: 'Neizdevās izveidot sarakstu.' });		}
 		setFlash({ type: 'success', message: 'Saraksts veiksmīgi izlabots!' }, cookies);
-		redirect(303, '/projekti');
+		const searchParams = url.searchParams.toString();
+		const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+		redirect(303, redirectUrl);
 	}
 };

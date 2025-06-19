@@ -13,7 +13,16 @@
 	import { useDroppable } from '@dnd-kit-svelte/core';
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
-	let { tab, isDragOverlay = false } = $props();
+	import type { TabWithTasks } from '$lib/types';
+	let {
+		tab,
+		isDragOverlay = false,
+		createUrlWithParams
+	}: {
+		tab: TabWithTasks;
+		isDragOverlay?: boolean;
+		createUrlWithParams?: (basePath: string) => string;
+	} = $props();
 
 	// Create tweened store for the total price animation
 	const totalPrice = tweened(0, {
@@ -71,7 +80,12 @@
 		>
 			<Card.Header class="justify-streatch flex flex-col gap-2 p-1">
 				<div class="flex w-full items-center gap-2">
-					<Button variant="ghost" href="/projekti/saraksti/labot/{tab?.id || ''}">
+					<Button
+						variant="ghost"
+						href={createUrlWithParams
+							? createUrlWithParams(`/projekti/saraksti/labot/${tab?.id || ''}`)
+							: `/projekti/saraksti/labot/${tab?.id || ''}`}
+					>
 						<Card.Title class="text-base">{tab?.title || 'Unknown'}</Card.Title>
 					</Button>
 					<Card.Description class="font-mono">
@@ -90,9 +104,12 @@
 					</div>
 				</div>
 				<hr class=" w-full border-2" style="border-color: {tab?.color || '#ffffff'}" />
-
-				<Button variant="ghost" class="w-full" href="/projekti/pievienot?tabId={tab?.id || ''}"
-					><Plus size="14"></Plus></Button
+				<Button
+					variant="ghost"
+					class="w-full"
+					href={createUrlWithParams
+						? createUrlWithParams(`/projekti/pievienot?tabId=${tab?.id || ''}`)
+						: `/projekti/pievienot?tabId=${tab?.id || ''}`}><Plus size="14"></Plus></Button
 				>
 			</Card.Header>
 			<Card.Content class="flex h-full flex-col gap-3 p-1">
@@ -111,7 +128,7 @@
 							</div>
 						{:else}
 							{#each tab?.tasks || [] as task (task.id)}
-								<ProjectCard {task} container={tab?.id?.toString() || ''} />
+								<ProjectCard {task} container={tab?.id?.toString() || ''} {createUrlWithParams} />
 							{/each}
 						{/if}
 					</SortableContext>

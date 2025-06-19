@@ -7,8 +7,10 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { debounce } from '$lib/utils';
 	import Plus from '@lucide/svelte/icons/plus';
+	import Search from '@lucide/svelte/icons/search';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
 		DndContext,
@@ -20,6 +22,7 @@
 	import { SortableContext, arrayMove } from '@dnd-kit-svelte/sortable';
 	import ProjectCard from '$lib/components/project-card.svelte';
 	import { getFlash } from 'sveltekit-flash-message';
+	import { browser } from '$app/environment';
 
 	let { data, children } = $props();
 	let tabs = $state(data.tabs);
@@ -28,22 +31,41 @@
 	$effect(() => {
 		tabs = data.tabs;
 	});
-
 	let searchTerm = $state(page.url.searchParams.get('search') || '');
+	let managerFilter = $state(page.url.searchParams.get('manager') || '');
 	let activeItem = $state<any>(null);
 	let activeType = $state<'tab' | 'task' | null>(null);
 
-	// Set up the debounced search function
-	const handleSearchInput = (event: Event) => {
-		const value = (event.target as HTMLInputElement).value;
-		searchTerm = value;
-		debouncedSearch(value);
+	// Handle search button click and Enter key
+	const handleSearch = () => {
+		updateUrlAndNavigate({ search: searchTerm });
 	};
+	// Handle search input Enter key
+	const handleSearchKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Enter') {
+			handleSearch();
+		}
+	};
+	// Handle manager filter change
+	const handleManagerChange = (value: string | undefined) => {
+		managerFilter = value || '';
+		updateUrlAndNavigate({ manager: managerFilter });
+	};
+	// Helper function to create URLs with current search parameters
+	const createUrlWithParams = (basePath: string) => {
+		if (!browser) return basePath;
+		const url = new URL(basePath, window.location.origin);
 
-	// Debounce the search to avoid multiple rapid requests
-	const debouncedSearch = debounce((value: string) => {
-		updateUrlAndNavigate({ search: value });
-	}, 1200);
+		// Add current search parameters
+		if (searchTerm) {
+			url.searchParams.set('search', searchTerm);
+		}
+		if (managerFilter) {
+			url.searchParams.set('manager', managerFilter);
+		}
+
+		return url.pathname + url.search;
+	};
 
 	// Update URL and navigate to the new page
 	function updateUrlAndNavigate(params: Record<string, any>) {
@@ -254,18 +276,43 @@
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
 		<h1 class="text-base font-medium">Projekti</h1>
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-		<Input
-			type="text"
-			class="w-full max-w-sm"
-			placeholder="Meklēt projektus..."
-			value={searchTerm}
-			oninput={handleSearchInput}
-		/>
+
+		<!-- Search input with button -->
+		<div class="flex items-center gap-2">
+			<Input
+				type="text"
+				class="w-full max-w-sm"
+				placeholder="Meklēt projektus..."
+				bind:value={searchTerm}
+				onkeydown={handleSearchKeydown}
+			/>
+			<Button onclick={handleSearch} variant="outline" size="sm" class="flex items-center gap-1">
+				<Search class="h-4 w-4" />
+				Meklēt
+			</Button>
+		</div>
+		<!-- Manager filter -->
+		<Select.Root type="single" value={managerFilter} onValueChange={handleManagerChange}>
+			<Select.Trigger class="w-[180px]">
+				{data.users.find((u) => u.id === managerFilter)?.name ||
+					data.users.find((u) => u.id === managerFilter)?.email ||
+					'Filtrēt pēc vadītāja'}
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Item value="">Visi vadītāji</Select.Item>
+				{#each data.users as user}
+					<Select.Item value={user.id}>{user.name || user.email}</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
 		<Button
-			href="/projekti/saraksti/pievienot"
+			href={createUrlWithParams('/projekti/saraksti/pievienot')}
 			variant="outline"
-			class="ml-auto flex items-center gap-2"><Plus />Pievienot</Button
+			class="ml-auto flex items-center gap-2"
 		>
+			<Plus />
+			Pievienot
+		</Button>
 	</div>
 </header>
 
@@ -287,15 +334,15 @@
 							dark:[&::-webkit-scrollbar-track]:bg-zinc-900"
 		>
 			{#each tabs as tab (tab.id)}
-				<List {tab} />
+				<List {tab} {createUrlWithParams} />
 			{/each}
 		</div>
 	</SortableContext>
 	<DragOverlay>
 		{#if activeType === 'task' && activeItem}
-			<ProjectCard task={activeItem} container={''} isDragOverlay={true} />
+			<ProjectCard task={activeItem} container={''} isDragOverlay={true} {createUrlWithParams} />
 		{:else if activeType === 'tab' && activeItem}
-			<List tab={activeItem} isDragOverlay={true} />
+			<List tab={activeItem} isDragOverlay={true} {createUrlWithParams} />
 		{/if}
 	</DragOverlay>
 </DndContext>

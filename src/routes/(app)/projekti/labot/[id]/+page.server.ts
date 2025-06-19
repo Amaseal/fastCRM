@@ -93,7 +93,7 @@ export const load = async ({ params }) => {
 };
 
 export const actions = {
-	default: async ({ request, cookies, locals, params }) => {
+	default: async ({ request, cookies, locals, params, url }) => {
 		// Validate the form data with superforms
 		const form = await superValidate(request, zod(taskSchema));
 		console.log(form.valid);
@@ -300,8 +300,9 @@ export const actions = {
 			console.error('Error updating task:', error);
 			return fail(500, { form, message: 'Internal server error' });
 		}
-
 		// Redirect after successful completion (outside try/catch)
-		redirect(303, '/projekti');
+		const searchParams = url.searchParams.toString();
+		const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+		redirect(303, redirectUrl);
 	}
 };

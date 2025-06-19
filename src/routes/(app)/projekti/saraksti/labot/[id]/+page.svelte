@@ -9,6 +9,7 @@
 
 	import { tabSchema, type TabSchema } from '../../schema';
 	import { type Tab } from '$lib/server/db/schema';
+	import { page } from '$app/stores';
 
 	let { data }: { data: { form: SuperValidated<Infer<TabSchema>>; item: Tab } } = $props();
 
@@ -17,8 +18,14 @@
 	});
 
 	const { form: formData, enhance } = form;
-
 	$inspect($formData);
+
+	// Create URL with preserved search parameters
+	const backUrl = $derived(
+		$page.url.searchParams.toString()
+			? `/projekti?${$page.url.searchParams.toString()}`
+			: '/projekti'
+	);
 </script>
 
 <svelte:head>
@@ -30,7 +37,7 @@
 		<Card.Root class="custom-scroll relative max-h-[90vh] w-full max-w-md gap-2 overflow-y-auto">
 			<Card.Header>
 				<a
-					href="/projekti"
+					href={backUrl}
 					class="text-muted-foreground hover:text-foreground absolute top-7 right-5 text-sm font-medium transition-colors"
 					><X /></a
 				>

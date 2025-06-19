@@ -4,7 +4,15 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import type { Task } from '$lib/server/db/schema.js';
 	import X from '@lucide/svelte/icons/x';
+	import { page } from '$app/stores';
+
 	let { data }: { data: { item: Task } } = $props();
+	// Create URL with preserved search parameters
+	const backUrl = $derived(
+		$page.url.searchParams.toString()
+			? `/projekti?${$page.url.searchParams.toString()}`
+			: '/projekti'
+	);
 </script>
 
 <svelte:head>
@@ -15,7 +23,7 @@
 		<Card.Root class="custom-scroll relative max-h-[90vh] w-full max-w-md gap-2 overflow-y-auto">
 			<Card.Header>
 				<a
-					href="/projekti"
+					href={backUrl}
 					class="text-muted-foreground hover:text-foreground absolute top-8 right-5 text-sm font-medium transition-colors"
 					><X /></a
 				>
@@ -27,7 +35,7 @@
 			<Card.Content class="p-6 pb-2">
 				<form method="POST" use:enhance>
 					<div class="flex items-center justify-end gap-2">
-						<Button href="/projekti" variant="secondary">Atcelt</Button>
+						<Button href={backUrl} variant="secondary">Atcelt</Button>
 						<Button type="submit" variant="destructive">Pārvietot</Button>
 					</div>
 				</form>

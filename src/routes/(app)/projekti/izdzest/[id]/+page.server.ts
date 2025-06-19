@@ -13,18 +13,18 @@ export const load = async ({ params }) => {
 }
 
 export const actions = {
-    default: async ({ params, fetch, cookies }) => {
+    default: async ({ params, fetch, cookies, url }) => {
         try {
             const taskId = Number(params.id);
             
             // Get the task to find the image path
             const item = await db.query.task.findFirst({
                 where: eq(task.id, taskId)
-            });
-
-            if (!item) {
+            });            if (!item) {
                 setFlash({ type: 'error', message: "Projekts netika atrasts!" }, cookies);
-                redirect(303, '/projekti');
+                const searchParams = url.searchParams.toString();
+                const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+                redirect(303, redirectUrl);
             }
 
              if (item && item.preview) {
@@ -63,13 +63,16 @@ export const actions = {
             
             // 4. Finally delete the main task
             await db.delete(task).where(eq(task.id, taskId));
-            
-        } catch (error) {
+              } catch (error) {
             console.error('Error deleting task:', error);
             setFlash({ type: 'error', message: "Kļūda dzēšot projektu!" }, cookies);
-            redirect(303, '/projekti');
+            const searchParams = url.searchParams.toString();
+            const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+            redirect(303, redirectUrl);
         }
         setFlash({ type: 'success', message: "Veiksmīgi izdzēsts!" }, cookies);
-        redirect(303, '/projekti');
+        const searchParams = url.searchParams.toString();
+        const redirectUrl = searchParams ? `/projekti?${searchParams}` : '/projekti';
+        redirect(303, redirectUrl);
     }
 };

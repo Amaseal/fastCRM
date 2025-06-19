@@ -27,11 +27,13 @@
 	let {
 		task,
 		container,
-		isDragOverlay = false
+		isDragOverlay = false,
+		createUrlWithParams
 	}: {
 		task: TaskWithRelations;
 		container?: any;
 		isDragOverlay?: boolean;
+		createUrlWithParams?: (basePath: string) => string;
 	} = $props();
 	let showNextcloudDialog = $state(false);
 	let actionMenuOpen = $state(false);
@@ -321,7 +323,9 @@
 				{/if}
 				<div class="flex items-center justify-between">
 					<Button
-						href={`/projekti/labot/${task.id}`}
+						href={createUrlWithParams
+							? createUrlWithParams(`/projekti/labot/${task.id}`)
+							: `/projekti/labot/${task.id}`}
 						variant="ghost"
 						size="sm"
 						class="justify-start"
@@ -366,9 +370,10 @@
 								</Button>
 
 								<Separator class="my-1" />
-
 								<Button
-									href={`/projekti/parvietot/${task.id}`}
+									href={createUrlWithParams
+										? createUrlWithParams(`/projekti/parvietot/${task.id}`)
+										: `/projekti/parvietot/${task.id}`}
 									variant="ghost"
 									size="sm"
 									class="w-full justify-start"
@@ -379,7 +384,9 @@
 								</Button>
 
 								<Button
-									href={`/projekti/izdzest/${task.id}`}
+									href={createUrlWithParams
+										? createUrlWithParams(`/projekti/izdzest/${task.id}`)
+										: `/projekti/izdzest/${task.id}`}
 									variant="ghost"
 									size="sm"
 									class="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
