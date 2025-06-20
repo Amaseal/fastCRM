@@ -28,9 +28,67 @@
 		initialProductIds?: number[];
 	} = $props(); // Access form data directly
 	let formData = form.form;
-
 	// Track which product fields have been touched to avoid showing validation errors prematurely
-	let touchedProducts = $state<Set<number>>(new Set()); // Ensure there's at least one product entry
+	let touchedProducts = $state<Set<number>>(new Set()); // Search state for each product selector
+	let searchQueries = $state<Record<number, string>>({});
+
+	// Get search query without mutation - safe for template expressions
+	function getSearchQuery(index: number): string {
+		return searchQueries[index] || '';
+	}
+
+	function setSearchQuery(index: number, value: string) {
+		searchQueries[index] = value;
+		searchQueries = { ...searchQueries };
+	}
+
+	// Initialize search queries for all product entries
+	$effect(() => {
+		if ($formData.taskProducts) {
+			$formData.taskProducts.forEach((_, index) => {
+				if (!(index in searchQueries)) {
+					searchQueries[index] = '';
+				}
+			});
+		}
+	});
+
+	// Fuzzy search function that handles diacritics and case insensitivity
+	function normalizeText(text: string): string {
+		return text
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+			.replace(/[^a-z0-9\s]/g, '') // Remove special characters except spaces
+			.trim();
+	}
+
+	function fuzzyMatch(searchTerm: string, targetText: string): boolean {
+		if (!searchTerm) return true;
+
+		const normalizedSearch = normalizeText(searchTerm);
+		const normalizedTarget = normalizeText(targetText);
+
+		// Simple fuzzy matching - check if all characters from search appear in order
+		let searchIndex = 0;
+		for (let i = 0; i < normalizedTarget.length && searchIndex < normalizedSearch.length; i++) {
+			if (normalizedTarget[i] === normalizedSearch[searchIndex]) {
+				searchIndex++;
+			}
+		}
+
+		return searchIndex === normalizedSearch.length;
+	}
+
+	// Filter options based on search query
+	function getFilteredOptions(searchQuery: string) {
+		if (!searchQuery) return options;
+
+		return options.filter(
+			(option) =>
+				fuzzyMatch(searchQuery, option.label) || fuzzyMatch(searchQuery, option.description || '')
+		);
+	} // Ensure there's at least one product entry
 	$effect(() => {
 		if (!$formData.taskProducts || $formData.taskProducts.length === 0) {
 			$formData.taskProducts = [{ productId: 0, count: 1 }];
@@ -106,20 +164,35 @@
 										{/if}
 									</div>
 									<ChevronsUpDownIcon class="shrink-0 opacity-50" />
-								</Popover.Trigger>
-								<input hidden value={entry.productId} name={props.name} />
+								</Popover.Trigger> <input hidden value={entry.productId} name={props.name} />
 								<Popover.Content class="w-[300px] p-0">
-									<Command.Root>
-										<Command.Input autofocus placeholder="Meklēt produktus..." class="h-9" />
-										<Command.Empty>Šāds produkts netika atrasts!</Command.Empty>
+									<Command.Root shouldFilter={false}>
+										<Command.Input
+											autofocus
+											placeholder="Meklēt produktus..."
+											class="h-9"
+											value={getSearchQuery(index)}
+											oninput={(e) => {
+												const target = e.target as HTMLInputElement;
+												if (target) {
+													setSearchQuery(index, target.value);
+												}
+											}}
+										/>
+										{@const filteredOptions = getFilteredOptions(getSearchQuery(index))}
+										{#if filteredOptions.length === 0}
+											<Command.Empty>Šāds produkts netika atrasts!</Command.Empty>
+										{/if}
 										<Command.Group class="custom-scroll max-h-64 overflow-y-auto">
-											{#each options as product (product.value)}
+											{#each filteredOptions as product (product.value)}
 												<Command.Item
 													value={`${product.label} ${product.description}`}
 													onSelect={() => {
 														$formData.taskProducts[index].productId = Number(product.value);
 														touchedProducts.add(index);
 														touchedProducts = new Set(touchedProducts);
+														// Clear search query after selection
+														setSearchQuery(index, '');
 													}}
 													class="flex items-start gap-1 py-2"
 												>
