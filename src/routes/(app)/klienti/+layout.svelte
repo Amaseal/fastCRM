@@ -8,7 +8,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChevronsLeft from '@lucide/svelte/icons/chevrons-left';
 	import ChevronsRight from '@lucide/svelte/icons/chevrons-right';
-	import { debounce } from '$lib/utils';
+	import { debounce, toCurrency } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -272,7 +272,9 @@
 							<Table.Cell class="hidden md:table-cell">{item.email || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.description || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.type || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.totalOrdered || '-'} €</Table.Cell>
+							<Table.Cell class="hidden md:table-cell"
+								>{toCurrency(item.totalOrdered as number) || '-'} €</Table.Cell
+							>
 							<Table.Cell class="text-center">
 								<Button href="/klienti/labot/{item.id}" variant="outline"><Pencil /></Button>
 							</Table.Cell>

@@ -87,77 +87,80 @@
 </script>
 
 {#if !showAddForm}
-	<Form.Field {form} name="clientId" class="flex w-full flex-col">
-		<Popover.Root bind:open>
-			<Form.Control id={triggerId}>
-				{#snippet children({ props })}
-					<Form.Label>Klients</Form.Label>
-					<Popover.Trigger
-						class={cn(
-							buttonVariants({ variant: 'outline' }),
-							'justify-between px-3 font-normal',
-							!$formData.clientId && 'text-muted-foreground'
-						)}
-						role="combobox"
-						{...props}
-					>
-						{clientOptions.find((f: { value: any }) => f.value === $formData.clientId)?.label ??
-							'Izvēlies klientu...'}
-						<ChevronsUpDownIcon class="opacity-50" />
-					</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
-				{/snippet}
-			</Form.Control>
-			<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
-				<Command.Root class="w-full max-w-full">
-					<Command.Input
-						autofocus
-						placeholder="Meklēt klientu..."
-						class="h-9"
-						value={searchTerm}
-						oninput={(e) => searchClients(e.currentTarget.value)}
-					/>
-					<Command.Empty>
-						{#if isSearching}
-							Meklē...
-						{:else if searchTerm.length === 0}
-							Sāciet rakstīt, lai meklētu klientus
-						{:else}
-							Šāds klients netika atrasts
-							<Button
-								variant="ghost"
-								onclick={() => {
-									showAddForm = true;
-									$formData.clientId = null;
-									$formData.newClientType = 'BTC';
-								}}>Pievienot</Button
-							>
-						{/if}
-					</Command.Empty>
-					<Command.Group value="clients" class="custom-scroll max-h-64 overflow-y-auto">
-						{#if isSearching}
-							<Command.Item disabled>Meklē...</Command.Item>
-						{/if}
-						{#each clientOptions as client (client.value)}
-							<Command.Item
-								value={client.label}
-								onSelect={() => {
-									$formData.clientId = client.value;
-									closeAndFocusTrigger(triggerId);
-								}}
-							>
-								{client.label}
-								<CheckIcon
-									class={cn('ml-auto', client.value !== $formData.clientId && 'text-transparent')}
-								/>
-							</Command.Item>
-						{/each}
-					</Command.Group>
-				</Command.Root>
-			</Popover.Content>
-		</Popover.Root>
+	<div class="flex items-end gap-2">
+		<Form.Field {form} name="clientId" class="flex w-full flex-col">
+			<Popover.Root bind:open>
+				<Form.Control id={triggerId}>
+					{#snippet children({ props })}
+						<Form.Label>Klients</Form.Label>
+						<Popover.Trigger
+							class={cn(
+								buttonVariants({ variant: 'outline' }),
+								'justify-between px-3 font-normal',
+								!$formData.clientId && 'text-muted-foreground'
+							)}
+							role="combobox"
+							{...props}
+						>
+							{clientOptions.find((f: { value: any }) => f.value === $formData.clientId)?.label ??
+								'Izvēlies klientu...'}
+							<ChevronsUpDownIcon class="opacity-50" />
+						</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
+					{/snippet}
+				</Form.Control>
+				<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
+					<Command.Root class="w-full max-w-full">
+						<Command.Input
+							autofocus
+							placeholder="Meklēt klientu..."
+							class="h-9"
+							value={searchTerm}
+							oninput={(e) => searchClients(e.currentTarget.value)}
+						/>
+						<Command.Empty>
+							{#if isSearching}
+								Meklē...
+							{:else if searchTerm.length === 0}
+								Sāciet rakstīt, lai meklētu klientus
+							{:else}
+								Šāds klients netika atrasts
+							{/if}
+						</Command.Empty>
+						<Command.Group value="clients" class="custom-scroll max-h-64 overflow-y-auto">
+							{#if isSearching}
+								<Command.Item disabled>Meklē...</Command.Item>
+							{/if}
+							{#each clientOptions as client (client.value)}
+								<Command.Item
+									value={client.label}
+									onSelect={() => {
+										$formData.clientId = client.value;
+										closeAndFocusTrigger(triggerId);
+									}}
+								>
+									{client.label}
+									<CheckIcon
+										class={cn('ml-auto', client.value !== $formData.clientId && 'text-transparent')}
+									/>
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.Root>
+				</Popover.Content>
+			</Popover.Root>
 
-		<Form.FieldErrors />
-	</Form.Field>
+			<Form.FieldErrors />
+		</Form.Field>
+		<Button
+			class="mb-2"
+			variant="outline"
+			onclick={() => {
+				showAddForm = true;
+				$formData.clientId = null;
+				$formData.newClientType = 'BTC';
+			}}>Pievienot</Button
+		>
+	</div>
 {:else}
 	<div class="flex items-end gap-2">
 		<Form.Field {form} name="newClientName">
