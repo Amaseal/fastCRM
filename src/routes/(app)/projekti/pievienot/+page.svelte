@@ -66,13 +66,17 @@
 		data.users.find((f: { id: string }) => f.id === $formData.responsiblePersonId)?.name ??
 			'Izvēlēties'
 	);
-
 	$effect(() => {
 		if (!$formData.tabId) {
 			$formData.tabId = data.tabId;
 		}
 		if (!$formData.managerId) {
 			$formData.managerId = currentUser?.id;
+		}
+		// Set default end date to 3 weeks from today if not already set
+		if (!$formData.endDate) {
+			const threeWeeksFromToday = today(getLocalTimeZone()).add({ weeks: 3 });
+			$formData.endDate = threeWeeksFromToday.toString();
 		}
 	});
 	let placeholder = $state<DateValue>(today(getLocalTimeZone()));
