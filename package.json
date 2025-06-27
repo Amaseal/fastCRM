@@ -2,8 +2,7 @@
 	"name": "fastcrm",
 	"private": true,
 	"version": "0.0.1",
-	"type": "module",
-	"scripts": {
+	"type": "module",	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
 		"start": "node build",
@@ -15,10 +14,12 @@
 		"lint": "prettier --check . && eslint .",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
+		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx scripts/seed.ts",
 		"db:reset": "drizzle-kit push && npm run db:seed",
-		"db:init": "pnpm db:push && pnpm db:seed"
+		"db:init": "pnpm db:push && pnpm db:seed",
+		"db:production-fix": "tsx scripts/production-migration-fix.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.3.0",

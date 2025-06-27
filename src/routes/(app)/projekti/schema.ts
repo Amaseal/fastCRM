@@ -81,8 +81,18 @@ export const taskSchema = z
 			.nullable()
 			.optional()
 			.transform((val) => val ?? undefined),
-		// Support multiple products
-		taskProducts: z.array(taskProductSchema).optional().default([]),
+		// Support multiple products - filter out empty entries (productId === 0) before validation
+		taskProducts: z.array(z.union([
+			taskProductSchema,
+			z.object({
+				id: z.number().optional(),
+				productId: z.literal(0), // Allow 0 for empty/placeholder entries
+				count: z.number().int().positive().default(1)
+			})
+		])).optional().default([]).transform((products) => 
+			// Filter out empty entries during transformation
+			products.filter(product => product.productId !== 0)
+		),
 	})
 	.superRefine((data, ctx) => {
 		// Validation for new client fields - if name is provided, then either email or phone is required

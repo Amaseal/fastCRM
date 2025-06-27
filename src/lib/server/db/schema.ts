@@ -1,6 +1,6 @@
 import { sqliteTable as table } from 'drizzle-orm/sqlite-core';
 import * as t from 'drizzle-orm/sqlite-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { type InferSelectModel } from 'drizzle-orm';
 
 export type User = InferSelectModel<typeof user>;
@@ -19,7 +19,7 @@ export type GameAttempt = InferSelectModel<typeof gameAttempts>;
 
 const timestamps = {
 	updated_at: t.int({ mode: 'timestamp' }).$onUpdate(() => new Date()),
-	created_at: t.int({ mode: 'timestamp' }).notNull().default(new Date())
+	created_at: t.int({ mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
 };
 
 export const user = table('users', {

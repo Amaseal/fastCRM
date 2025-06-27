@@ -12,7 +12,12 @@ if [ ! -f "/app/data/local.db" ]; then
     pnpm run db:seed
     echo "Database seeded successfully."
 else
-    echo "Database already exists. Skipping initialization."
+    echo "Database already exists. Running migration compatibility check..."
+    pnpm tsx scripts/production-migration-fix.ts
+    
+    echo "Applying any pending migrations..."
+    pnpm run db:migrate
+    echo "Migration check complete."
 fi
 
 echo "Starting application..."

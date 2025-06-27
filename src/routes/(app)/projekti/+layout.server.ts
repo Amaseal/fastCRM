@@ -43,15 +43,17 @@ export const load = async ({ url, locals }) => {
 		taskConditions.push(eq(task.managerId, managerFilter));
 	}
 
-	if (responsibleFilter) {
+		if (responsibleFilter) {
 		taskConditions.push(eq(task.responsiblePersonId, responsibleFilter));
 	}
 	if (clientFilter) {
 		taskConditions.push(eq(task.clientId, Number(clientFilter)));
-	} // Fetch all tabs except the Done tab (tag 'done')
+	}
 
+	// Fetch all tabs except the Done tab (tag 'done')
 	let tasksQuery = db.query.task.findMany({
 		where: taskConditions.length > 0 ? and(...taskConditions) : undefined,
+		orderBy: [sql`${task.endDate} IS NULL, ${task.endDate} ASC`], // Order by end date, soonest first, null values last
 		with: {
 			client: true,
 			manager: true,
