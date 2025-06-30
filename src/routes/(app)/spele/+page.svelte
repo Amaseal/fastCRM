@@ -60,10 +60,10 @@
 		// Remove duplicate character handling since Input component handles it
 		// Only handle special keys here
 	}
-
 	function handleInput(event: Event) {
 		const target = event.target as HTMLInputElement;
-		let value = target.value.toUpperCase().replace(/[^A-Z]/g, '');
+		// Allow Latvian letters: A-Z and Latvian diacriticals (Ā, Č, Ē, Ģ, Ī, Ķ, Ļ, Ņ, Š, Ū, Ž)
+		let value = target.value.toUpperCase().replace(/[^A-ZĀČĒĢĪĶĻŅŠŪŽ]/g, '');
 		if (value.length > WORD_LENGTH) {
 			value = value.slice(0, WORD_LENGTH);
 		}
