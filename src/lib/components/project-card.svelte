@@ -215,7 +215,7 @@
 	};
 </script>
 
-<Card.Root class="gap-0 p-1 ">
+<Card.Root class="gap-0  p-1">
 	<Card.Header class="flex items-start justify-between p-2">
 		<a
 			class="flex w-full flex-col gap-0.5"
@@ -228,12 +228,15 @@
 					<TriangleAlert />
 				{/if}{task.title}
 			</Card.Title>
-			<Card.Description>€{formatPrice(remainingPrice())}</Card.Description>
+			<Card.Description class="flex items-center justify-between">
+				<span>€{formatPrice(remainingPrice())}</span>
+				<span>{formatDate(task.created_at)}</span></Card.Description
+			>
 		</a>
 
 		<div
 			use:dragHandle
-			class="cursor-grab rounded p-3 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-800"
+			class="cursor-grab rounded p-3 hover:bg-zinc-800 active:cursor-grabbing dark:hover:bg-zinc-100"
 			role="button"
 			tabindex="0"
 		>
@@ -248,10 +251,10 @@
 				: `/projekti/labot/${task.id}`}
 		>
 			{#if task.client}
-				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<p class="flex items-center gap-1 text-sm text-zinc-600">
 					<Handshake size={16} />
 					Klients:
-					<span class="font-bold text-black dark:text-white">
+					<span class="">
 						{task.client.name}
 					</span>
 				</p>
@@ -259,44 +262,35 @@
 				<hr class="my-2 border-gray-300" />
 			{/if}
 
-			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
-				<CalendarPlus size={16} />
-				Izveidots:
-				<span class="font-bold text-black dark:text-white">
-					{formatDate(task.created_at)}
-				</span>
-			</p>
-			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+			<p class="flex items-center gap-1 text-sm text-zinc-600">
 				<Clock size={16} />
 				Jānodod:
-				<span class="font-bold text-black dark:text-white">
+				<span class="">
 					{task.endDate ? formatDate(task.endDate) : 'Nav norādīts'}
 				</span>
 			</p>
-			<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+			<p class="flex items-center gap-1 text-sm text-zinc-600">
 				<Hourglass size={16} />
 				Aktīvs:
-				<span class="font-bold text-black dark:text-white"
-					>{getDateDifference(task.created_at, new Date())}</span
-				>
+				<span class="">{getDateDifference(task.created_at, new Date())}</span>
 			</p>
 
 			<hr class="my-2 border-gray-300" />
 
 			{#if task.responsiblePerson}
-				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<p class="flex items-center gap-1 text-sm">
 					<User size={16} />
 					Atbildīgs:
-					<span class="font-bold text-black dark:text-white">
+					<span class="">
 						{task.responsiblePerson.name}
 					</span>
 				</p>
 				<hr class="my-2 border-gray-300" />
 			{:else}
-				<p class="flex items-center gap-1 text-sm text-gray-700 dark:text-neutral-300">
+				<p class="flex items-center gap-1 text-sm text-zinc-600">
 					<User size={16} />
 					Izveidoja:
-					<span class="font-bold text-black dark:text-white">
+					<span class="">
 						{task.manager?.name || 'Nav norādīts'}
 					</span>
 				</p>

@@ -72,7 +72,9 @@
 	}
 </script>
 
-<Card.Root class=" bg-background relative flex h-full w-[240px] flex-shrink-0 flex-col gap-0  p-1">
+<Card.Root
+	class=" bg-background/70 relative flex h-full w-[240px] flex-shrink-0 flex-col gap-0  p-1"
+>
 	<Card.Header class="justify-streatch flex flex-col gap-2 p-1">
 		<div class="flex w-full items-center gap-2">
 			<Button
@@ -114,7 +116,7 @@
 			use:dragHandleZone={{
 				items: (tab?.tasks || []).map((task: Task) => ({ ...task, sourceTabId: tab?.id })),
 				flipDurationMs: 300,
-				dropTargetClasses: ['bg-zinc-800', 'rounded-lg'],
+				dropTargetClasses: ['rounded-xl', 'bg-background/80'],
 				dropTargetStyle: {
 					outline: 'none'
 				},

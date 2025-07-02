@@ -126,23 +126,9 @@
 	}
 	// Reactive total price calculation
 	let totalPrice = $derived(calculateTotalPrice());
-	// Defensive effect: log and reset invalid productIds
-	$effect(() => {
-		if ($formData.taskProducts) {
-			let changed = false;
-			$formData.taskProducts = $formData.taskProducts.map((entry) => {
-				const exists = products.some((p) => p.id === entry.productId);
-				if (!exists && entry.productId !== 0) {
-					console.warn('Invalid productId in form data:', entry.productId);
-					changed = true;
-					return { ...entry, productId: 0 };
-				}
-				return entry;
-			});
-			if (changed) {
-				// Optionally, trigger a notification for the user here
-			}
-		}
+
+	$inspect(() => {
+		$formData.taskProducts;
 	});
 </script>
 

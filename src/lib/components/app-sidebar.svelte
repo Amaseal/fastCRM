@@ -13,6 +13,7 @@
 	import type { ComponentProps } from 'svelte';
 	import Save from '@lucide/svelte/icons/save';
 	import { SettingsIcon } from '@lucide/svelte';
+	import Watcher from './watcher.svelte';
 	const items = [
 		{
 			title: 'Projekti',
@@ -55,7 +56,7 @@
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
-	<Sidebar.Header class="bg-background/20">
+	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton class=" data-[slot=sidebar-menu-button]:!p-1.5">
@@ -69,21 +70,24 @@
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
-	<Sidebar.Content class="bg-background/20">
+	<Sidebar.Content>
 		<NavMain {items} />
 	</Sidebar.Content>
-	<Sidebar.Footer class="bg-background/20">
+	<Sidebar.Footer>
 		<Sidebar.Menu>
-			<Sidebar.MenuItem>
-				<Sidebar.MenuButton>
-					{#snippet child({ props })}
-						<a href="/settings" {...props} class="flex items-end gap-2">
-							<SettingsIcon></SettingsIcon>
-							<span class="text-base font-semibold">Iestatijumi</span>
-						</a>
-					{/snippet}
-				</Sidebar.MenuButton>
-			</Sidebar.MenuItem>
+			<div class="flex items-center justify-between gap-2">
+				<Watcher></Watcher>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton>
+						{#snippet child({ props })}
+							<a href="/settings" {...props} class="flex items-end gap-2">
+								<SettingsIcon></SettingsIcon>
+								<span class="text-base font-semibold">Iestatijumi</span>
+							</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+			</div>
 		</Sidebar.Menu>
 	</Sidebar.Footer>
 </Sidebar.Root>

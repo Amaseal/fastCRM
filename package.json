@@ -2,7 +2,8 @@
 	"name": "fastcrm",
 	"private": true,
 	"version": "0.0.1",
-	"type": "module",	"scripts": {
+	"type": "module",
+	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
 		"start": "node build",
@@ -95,6 +96,7 @@
 		"katex": "^0.16.22",
 		"lowlight": "^3.3.0",
 		"mime-types": "^3.0.1",
+		"mode-watcher": "^1.1.0",
 		"svelte-dnd-action": "^0.9.61",
 		"svelte-tiptap": "^2.1.0",
 		"sveltekit-flash-message": "^2.4.6",

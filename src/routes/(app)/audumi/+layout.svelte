@@ -208,7 +208,7 @@
 
 {@render children?.()}
 <header
-	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
+	class="bg-background flex h-(--header-height) shrink-0 items-center gap-2 rounded-lg border-b px-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
 >
 	<div class="flex w-full items-center gap-1 lg:gap-2">
 		<Sidebar.Trigger class="-ml-1" />
@@ -229,7 +229,7 @@
 </header>
 
 <div class="mb-4 space-y-4">
-	<div class="rounded-md border">
+	<div class="bg-background rounded-md border">
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>

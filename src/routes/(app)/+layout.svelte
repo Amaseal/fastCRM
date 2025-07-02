@@ -7,19 +7,19 @@
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import CheckCircle2Icon from '@lucide/svelte/icons/check-circle-2';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
-
+	import { ModeWatcher } from 'mode-watcher';
 	const flash = getFlash(page, { clearAfterMs: 2000 });
 
 	let { children } = $props();
 </script>
 
 <Sidebar.Provider
-	style="--sidebar-width: calc(var(--spacing) * 48); --header-height: calc(var(--spacing) * 12); background: url(https://picsum.photos/seed/picsum/1080/1920?blur) no-repeat center center; background-size: cover;"
+	style="--sidebar-width: calc(var(--spacing) * 48); --header-height: calc(var(--spacing) * 12); "
 >
-	<AppSidebar variant="inset" />
-	<Sidebar.Inset class="bg-background/40 ">
+	<AppSidebar />
+	<Sidebar.Inset class="m-0 p-0">
 		<div class="relative flex flex-1 flex-col">
-			<div class="@container/main flex flex-1 flex-col gap-2 p-4">
+			<div class=" @container/main relative z-10 m-0 flex flex-1 flex-col gap-2 p-4">
 				{#if $flash}
 					{#if $flash.type === 'error'}
 						<Alert.Root variant="destructive" class="absolute right-6 bottom-6 z-[1000] max-w-96">
@@ -39,6 +39,11 @@
 				{/if}
 				{@render children()}
 			</div>
+			<div class="bg-background/50 absolute inset-0 z-2"></div>
+			<div
+				class="absolute inset-0 bg-[url(https://picsum.photos/seed/picsum/1080/1920?blur)] bg-cover"
+			></div>
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+<ModeWatcher />
