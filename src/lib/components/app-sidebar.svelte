@@ -55,7 +55,7 @@
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
-	<Sidebar.Header>
+	<Sidebar.Header class="bg-background/20">
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton class=" data-[slot=sidebar-menu-button]:!p-1.5">
@@ -69,10 +69,10 @@
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
-	<Sidebar.Content>
+	<Sidebar.Content class="bg-background/20">
 		<NavMain {items} />
 	</Sidebar.Content>
-	<Sidebar.Footer>
+	<Sidebar.Footer class="bg-background/20">
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton>

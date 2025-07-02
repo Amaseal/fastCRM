@@ -14,10 +14,10 @@
 </script>
 
 <Sidebar.Provider
-	style="--sidebar-width: calc(var(--spacing) * 48); --header-height: calc(var(--spacing) * 12);"
+	style="--sidebar-width: calc(var(--spacing) * 48); --header-height: calc(var(--spacing) * 12); background: url(https://picsum.photos/seed/picsum/1080/1920?blur) no-repeat center center; background-size: cover;"
 >
 	<AppSidebar variant="inset" />
-	<Sidebar.Inset>
+	<Sidebar.Inset class="bg-background/40 ">
 		<div class="relative flex flex-1 flex-col">
 			<div class="@container/main flex flex-1 flex-col gap-2 p-4">
 				{#if $flash}
