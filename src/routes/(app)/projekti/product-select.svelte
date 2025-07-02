@@ -90,13 +90,15 @@
 		);
 	} // Ensure there's at least one product entry
 	$effect(() => {
-		if (!$formData.taskProducts || $formData.taskProducts.length === 0) {
+		// Only set default if taskProducts is undefined (not if it's an empty array)
+		if ($formData.taskProducts === undefined) {
 			$formData.taskProducts = [{ productId: 0, count: 1 }];
 		}
 	}); // Add a new product entry
 	function addEntry() {
-		if (!$formData.taskProducts) $formData.taskProducts = [];
-		$formData.taskProducts = [...$formData.taskProducts, { productId: 0, count: 1 }];
+		let current = Array.isArray($formData.taskProducts) ? [...$formData.taskProducts] : [];
+		current.push({ productId: 0, count: 0 });
+		$formData.taskProducts = current;
 	}
 	// Remove a product entry
 	function removeEntry(index: number) {

@@ -39,7 +39,7 @@
 				{/if}
 				{@render children()}
 			</div>
-			<div class="bg-background/50 absolute inset-0 z-2"></div>
+			<div class="dark:bg-background/90 bg-background/60 absolute inset-0 z-2"></div>
 			<div
 				class="absolute inset-0 bg-[url(https://picsum.photos/seed/picsum/1080/1920?blur)] bg-cover"
 			></div>

@@ -236,7 +236,7 @@
 
 		<div
 			use:dragHandle
-			class="cursor-grab rounded p-3 hover:bg-zinc-800 active:cursor-grabbing dark:hover:bg-zinc-100"
+			class="cursor-grab rounded p-3 hover:bg-zinc-100 active:cursor-grabbing dark:hover:bg-zinc-600 dark:hover:bg-zinc-800"
 			role="button"
 			tabindex="0"
 		>
@@ -251,7 +251,7 @@
 				: `/projekti/labot/${task.id}`}
 		>
 			{#if task.client}
-				<p class="flex items-center gap-1 text-sm text-zinc-600">
+				<p class="flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
 					<Handshake size={16} />
 					Klients:
 					<span class="">
@@ -262,14 +262,14 @@
 				<hr class="my-2 border-gray-300" />
 			{/if}
 
-			<p class="flex items-center gap-1 text-sm text-zinc-600">
+			<p class="flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
 				<Clock size={16} />
 				Jānodod:
 				<span class="">
 					{task.endDate ? formatDate(task.endDate) : 'Nav norādīts'}
 				</span>
 			</p>
-			<p class="flex items-center gap-1 text-sm text-zinc-600">
+			<p class="flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
 				<Hourglass size={16} />
 				Aktīvs:
 				<span class="">{getDateDifference(task.created_at, new Date())}</span>
@@ -287,7 +287,7 @@
 				</p>
 				<hr class="my-2 border-gray-300" />
 			{:else}
-				<p class="flex items-center gap-1 text-sm text-zinc-600">
+				<p class="flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
 					<User size={16} />
 					Izveidoja:
 					<span class="">

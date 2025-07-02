@@ -14,6 +14,7 @@
 	import Save from '@lucide/svelte/icons/save';
 	import { SettingsIcon } from '@lucide/svelte';
 	import Watcher from './watcher.svelte';
+	import Logo from './logo.svelte';
 	const items = [
 		{
 			title: 'Projekti',
@@ -62,7 +63,7 @@
 				<Sidebar.MenuButton class=" data-[slot=sidebar-menu-button]:!p-1.5">
 					{#snippet child({ props })}
 						<a href="/" {...props} class="flex items-end gap-2">
-							<img src="logo.svg" class="h-8 object-contain" alt="" />
+							<Logo></Logo>
 							<span class="text-base font-semibold">Fastbreak CRM</span>
 						</a>
 					{/snippet}
