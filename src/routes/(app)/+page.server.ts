@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	tomorrow.setDate(tomorrow.getDate() + 1);
 
 	const todayStr = today.toISOString().split('T')[0];
-	const tomorrowStr = tomorrow.toISOString().split('T')[0];	// Get top managers (users with most managed tasks this month)
+	const tomorrowStr = tomorrow.toISOString().split('T')[0];	// Get top managers (users with most managed tasks all time)
 	const topManagers = await db
 		.select({
 			id: user.id,
@@ -23,17 +23,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			taskCount: count(task.id)
 		})
 		.from(user)
-		.leftJoin(
-			task,
-			and(
-				eq(task.managerId, user.id),
-				gte(task.created_at, currentMonthStart),
-				lte(task.created_at, currentMonthEnd)
-			)
-		)
+		.leftJoin(task, eq(task.managerId, user.id))
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
-		.limit(5);	// Get top responsible persons (users with most responsible tasks this month)
+		.limit(5);	// Get top responsible persons (users with most responsible tasks all time)
 	const topResponsiblePersons = await db
 		.select({
 			id: user.id,
@@ -41,14 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			taskCount: count(task.id)
 		})
 		.from(user)
-		.leftJoin(
-			task,
-			and(
-				eq(task.responsiblePersonId, user.id),
-				gte(task.created_at, currentMonthStart),
-				lte(task.created_at, currentMonthEnd)
-			)
-		)
+		.leftJoin(task, eq(task.responsiblePersonId, user.id))
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
 		.limit(5);
