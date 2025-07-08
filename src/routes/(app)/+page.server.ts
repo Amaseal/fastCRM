@@ -15,9 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	tomorrow.setDate(tomorrow.getDate() + 1);
 
 	const todayStr = today.toISOString().split('T')[0];
-	const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-	// Get top managers (users with most managed tasks this month)
+	const tomorrowStr = tomorrow.toISOString().split('T')[0];	// Get top managers (users with most managed tasks this month)
 	const topManagers = await db
 		.select({
 			id: user.id,
@@ -27,13 +25,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(user)
 		.leftJoin(
 			task,
-			sql`${task.managerId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`
+			and(
+				eq(task.managerId, user.id),
+				gte(task.created_at, currentMonthStart),
+				lte(task.created_at, currentMonthEnd)
+			)
 		)
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
-		.limit(5);
-
-	// Get top responsible persons (users with most responsible tasks this month)
+		.limit(5);	// Get top responsible persons (users with most responsible tasks this month)
 	const topResponsiblePersons = await db
 		.select({
 			id: user.id,
@@ -43,7 +43,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(user)
 		.leftJoin(
 			task,
-			sql`${task.responsiblePersonId} = ${user.id} AND ${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)}`
+			and(
+				eq(task.responsiblePersonId, user.id),
+				gte(task.created_at, currentMonthStart),
+				lte(task.created_at, currentMonthEnd)
+			)
 		)
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
@@ -132,8 +136,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			month: monthStr,
 			profit: monthProfit
 		});
-	}
-	// Calculate profit for current month (task prices - product costs)
+	}	// Calculate profit for current month (task prices - product costs)
 	const currentMonthTasks = await db
 		.select({
 			taskId: task.id,
@@ -144,7 +147,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin(taskProduct, eq(task.id, taskProduct.taskId))
 		.leftJoin(product, eq(taskProduct.productId, product.id))
 		.where(
-			sql`${task.created_at} >= ${Math.floor(currentMonthStart.getTime() / 1000)} AND ${task.created_at} <= ${Math.floor(currentMonthEnd.getTime() / 1000)} AND ${task.price} IS NOT NULL`
+			and(
+				gte(task.created_at, currentMonthStart),
+				lte(task.created_at, currentMonthEnd),
+				sql`${task.price} IS NOT NULL`
+			)
 		)
 		.groupBy(task.id, task.price);
 
@@ -153,8 +160,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const profit = (taskData.taskPrice || 0) - (taskData.productCost || 0);
 		return total + profit;
 	}, 0);	return {
-		topManagers: topManagers.filter((manager) => manager.taskCount > 0),
-		topResponsiblePersons: topResponsiblePersons.filter((person) => person.taskCount > 0),
+		topManagers,
+		topResponsiblePersons,
 		bestClients: bestClients.filter((client) => client.totalOrdered),
 		urgentTasks,
 		userNotifications,
