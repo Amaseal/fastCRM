@@ -219,9 +219,9 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head>Telefons</Table.Head>
-					<Table.Head>E-pasts</Table.Head>
-					<Table.Head>Apraksts</Table.Head>
+					<Table.Head class="hidden md:table-cell">Telefons</Table.Head>
+					<Table.Head class="hidden md:table-cell">E-pasts</Table.Head>
+					<Table.Head class="hidden md:table-cell">Apraksts</Table.Head>
 					<Table.Head
 						class="hidden cursor-pointer md:table-cell"
 						onclick={() => handleSort('type')}
@@ -297,7 +297,7 @@
 			)} no {data.pagination.totalCount} ierakstiem
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex flex-col items-center gap-2 md:flex-row">
 			<div class="flex items-center space-x-2">
 				<Button
 					variant="outline"

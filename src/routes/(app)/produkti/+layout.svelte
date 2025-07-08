@@ -222,7 +222,7 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head>Apraksts</Table.Head>
+					<Table.Head class="hidden md:table-cell">Apraksts</Table.Head>
 
 					<Table.Head
 						class="hidden cursor-pointer md:table-cell"
@@ -241,7 +241,7 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head>Labots</Table.Head>
+					<Table.Head class="hidden md:table-cell">Labots</Table.Head>
 					<Table.Head class="w-12 text-right">Rediģēt</Table.Head>
 					<Table.Head class="w-12 text-right">Izdzēst</Table.Head>
 				</Table.Row>
@@ -257,10 +257,10 @@
 					{#each data.products as item (item.id)}
 						<Table.Row class="hover:bg-muted/50 cursor-pointer">
 							<Table.Cell class="font-medium">{item.title || '-'}</Table.Cell>
-							<Table.Cell>{item.description || '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell">{item.description || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.cost} €</Table.Cell>
 
-							<Table.Cell>
+							<Table.Cell class="hidden md:table-cell">
 								{formatDate(item.updated_at || item.created_at)}
 							</Table.Cell>
 
@@ -286,7 +286,7 @@
 			)} no {data.pagination.totalCount} ierakstiem
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex flex-col items-center gap-2 md:flex-row">
 			<div class="flex items-center space-x-2">
 				<Button
 					variant="outline"

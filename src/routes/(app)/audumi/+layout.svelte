@@ -247,7 +247,10 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head class="cursor-pointer" onclick={() => handleSort('article')}>
+					<Table.Head
+						class="hidden cursor-pointer md:table-cell"
+						onclick={() => handleSort('article')}
+					>
 						<div class="flex items-center gap-1">
 							Artikuls
 							{#if sortColumn === 'article'}
@@ -292,7 +295,10 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head class="cursor-pointer" onclick={() => handleSort('width')}>
+					<Table.Head
+						class="hidden cursor-pointer md:table-cell"
+						onclick={() => handleSort('width')}
+					>
 						<div class="flex items-center gap-1">
 							Platums
 							{#if sortColumn === 'width'}
@@ -354,12 +360,14 @@
 					{#each data.materials as item (item.id)}
 						<Table.Row class="hover:bg-muted/50 cursor-pointer" onclick={() => openEditModal(item)}>
 							<Table.Cell class="font-medium">{item.title || '-'}</Table.Cell>
-							<Table.Cell>{item.article || '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell">{item.article || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.manufacturer || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell"
 								>{item.gsm !== undefined ? `${item.gsm} g/m²` : '-'}</Table.Cell
 							>
-							<Table.Cell>{item.width !== undefined ? `${item.width} mm` : '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell"
+								>{item.width !== undefined ? `${item.width} mm` : '-'}</Table.Cell
+							>
 							<Table.Cell>{item.remaining !== undefined ? `${item.remaining} m` : '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell"
 								>{formatDate(item.updated_at || item.created_at)}</Table.Cell
@@ -400,7 +408,7 @@
 			)} no {data.pagination.totalCount} ierakstiem
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex flex-col items-center gap-2 md:flex-row">
 			<div class="flex items-center space-x-2">
 				<Button
 					variant="outline"

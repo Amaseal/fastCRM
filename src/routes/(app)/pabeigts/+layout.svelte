@@ -8,7 +8,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChevronsLeft from '@lucide/svelte/icons/chevrons-left';
 	import ChevronsRight from '@lucide/svelte/icons/chevrons-right';
-	import { debounce, formatDate } from '$lib/utils';
+	import { debounce, formatDate, toCurrency } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -19,6 +19,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Separator } from '$lib/components/ui/separator';
 	import type { TaskWithRelations } from '$lib/types';
+	import { Eye } from '@lucide/svelte';
 
 	let {
 		data,
@@ -215,10 +216,11 @@
 							{/if}
 						</div>
 					</Table.Head>
-					<Table.Head>Klients</Table.Head>
-					<Table.Head>Atbildīgais</Table.Head>
-					<Table.Head>Cena</Table.Head>
+					<Table.Head class="hidden md:table-cell">Klients</Table.Head>
+					<Table.Head class="hidden md:table-cell">Atbildīgais</Table.Head>
+					<Table.Head class="hidden md:table-cell">Cena</Table.Head>
 					<Table.Head>Nodots</Table.Head>
+					<Table.Head>Apskatīt</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
@@ -232,13 +234,14 @@
 					{#each data.tasks as item (item.id)}
 						<Table.Row class="hover:bg-muted/50 cursor-pointer">
 							<Table.Cell class="font-medium">{item.title || '-'}</Table.Cell>
-							<Table.Cell>{item.client?.name || '-'}</Table.Cell>
-							<Table.Cell>{item.manager?.name || '-'}</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{item.price || '-'}</Table.Cell>
-
+							<Table.Cell class="hidden md:table-cell">{item.client?.name || '-'}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell">{item.manager?.name || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell"
-								>{formatDate(item.updated_at as Date)}</Table.Cell
+								>{toCurrency(item.price as number) || '-'}</Table.Cell
 							>
+
+							<Table.Cell>{formatDate(item.updated_at as Date)}</Table.Cell>
+							<Table.Cell><Button href="/projekti/labot/{item.id}"><Eye /></Button></Table.Cell>
 						</Table.Row>
 					{/each}
 				{/if}
@@ -255,7 +258,7 @@
 			)} no {data.pagination.totalCount} ierakstiem
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex flex-col items-center gap-2 md:flex-row">
 			<div class="flex items-center space-x-2">
 				<Button
 					variant="outline"

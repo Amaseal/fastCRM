@@ -200,7 +200,7 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					<Table.Head class="w-[300px]">
+					<Table.Head class="w-[150px] md:w-[300px]">
 						<Button
 							variant="ghost"
 							onclick={() => handleSort('filename')}
@@ -216,7 +216,7 @@
 							{/if}
 						</Button>
 					</Table.Head>
-					<Table.Head>
+					<Table.Head class="hidden md:table-cell">
 						<Button
 							variant="ghost"
 							onclick={() => handleSort('size')}
@@ -232,8 +232,8 @@
 							{/if}
 						</Button>
 					</Table.Head>
-					<Table.Head>Projekts</Table.Head>
-					<Table.Head>
+					<Table.Head class="hidden md:table-cell">Projekts</Table.Head>
+					<Table.Head class="hidden md:table-cell">
 						<Button
 							variant="ghost"
 							onclick={() => handleSort('created_at')}
@@ -256,8 +256,8 @@
 				{#each data.files as file (file.id)}
 					<Table.Row>
 						<Table.Cell class="font-medium">{file.filename}</Table.Cell>
-						<Table.Cell>{formatFileSize(file.size)}</Table.Cell>
-						<Table.Cell>
+						<Table.Cell class="hidden md:table-cell">{formatFileSize(file.size)}</Table.Cell>
+						<Table.Cell class="hidden md:table-cell">
 							{#if file.task}
 								<a
 									href="/projekti/labot/{file.task.id}"
@@ -269,7 +269,7 @@
 								<span class="text-muted-foreground">Nav piesaistīts</span>
 							{/if}
 						</Table.Cell>
-						<Table.Cell>{formatDate(file.created_at)}</Table.Cell>
+						<Table.Cell class="hidden md:table-cell">{formatDate(file.created_at)}</Table.Cell>
 						<Table.Cell class="text-right">
 							<div class="flex items-center justify-end gap-2">
 								<Button variant="outline" size="sm" onclick={() => downloadFile(file)}>
@@ -301,7 +301,7 @@
 			)} no {data.pagination.totalCount} ierakstiem
 		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="flex flex-col items-center gap-2 md:flex-row">
 			<div class="flex items-center space-x-2">
 				<Button
 					variant="outline"

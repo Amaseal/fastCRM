@@ -4,7 +4,7 @@ import { and, desc, asc, sql, count } from 'drizzle-orm';
 
 export const load = async ({ url }) => {
 	const page = parseInt(url.searchParams.get('page') || '0');
-	const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+	const pageSize = parseInt(url.searchParams.get('pageSize') || '50');
 	const search = url.searchParams.get('search') || '';
 	const sortColumn = url.searchParams.get('sortColumn') || 'id';
 	const sortDirection = url.searchParams.get('sortDirection') || 'asc';

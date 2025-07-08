@@ -5,7 +5,7 @@ import { and, desc, asc, sql, count, like, or, eq } from 'drizzle-orm';
 export const load = async ({ url }) => {
 	// Parse query parameters for pagination and filtering
 	const page = parseInt(url.searchParams.get('page') || '0');
-	const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+	const pageSize = parseInt(url.searchParams.get('pageSize') || '50');
 	const search = url.searchParams.get('search') || '';
 	const sortColumn = url.searchParams.get('sortColumn') || 'id';
 	const sortDirection = url.searchParams.get('sortDirection') || 'desc';
