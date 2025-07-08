@@ -359,7 +359,11 @@
 				{:else}
 					{#each data.materials as item (item.id)}
 						<Table.Row class="hover:bg-muted/50 cursor-pointer" onclick={() => openEditModal(item)}>
-							<Table.Cell class="font-medium">{item.title || '-'}</Table.Cell>
+							<Table.Cell class="font-medium">
+								<div class="max-w-[100px] truncate sm:max-w-none" title={item.title}>
+									{item.title || '-'}
+								</div>
+							</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.article || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{item.manufacturer || '-'}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell"
@@ -368,7 +372,9 @@
 							<Table.Cell class="hidden md:table-cell"
 								>{item.width !== undefined ? `${item.width} mm` : '-'}</Table.Cell
 							>
-							<Table.Cell>{item.remaining !== undefined ? `${item.remaining} m` : '-'}</Table.Cell>
+							<Table.Cell
+								>{item.remaining !== undefined ? `${item.remaining} ruļļi` : '-'}</Table.Cell
+							>
 							<Table.Cell class="hidden md:table-cell"
 								>{formatDate(item.updated_at || item.created_at)}</Table.Cell
 							>

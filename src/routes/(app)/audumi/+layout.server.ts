@@ -36,7 +36,9 @@ export const load = async ({ url }) => {
 	const sortableColumns = {
 		title: material.title,
 		article: material.article,
-		manufacturer: material.manufacturer
+		manufacturer: material.manufacturer,
+		remaining: material.remaining,
+		width: material.width,
 	};
 
 	// Choose the column to sort by
