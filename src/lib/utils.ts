@@ -111,6 +111,42 @@ export function isWorkFeasible(
 }
 
 
+/**
+ * Get the number of days until a deadline (negative if overdue)
+ */
+export function getDaysUntilDeadline(deadlineDate: string | number | Date): number {
+	const deadline = new Date(deadlineDate);
+	const today = new Date();
+
+	// Normalize dates (set time to midnight for accurate comparison)
+	const normalize = (date: Date): Date =>
+		new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+	const todayMidnight = normalize(today);
+	const deadlineMidnight = normalize(deadline);
+
+	// Calculate days remaining (positive = future, negative = past, 0 = today)
+	return Math.floor(
+		(deadlineMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24)
+	);
+}
+
+/**
+ * Check if a deadline should show a warning icon (3 days or less)
+ */
+export function shouldShowDeadlineWarning(deadlineDate: string | number | Date): boolean {
+	const daysUntil = getDaysUntilDeadline(deadlineDate);
+	return daysUntil <= 3;
+}
+
+/**
+ * Check if a deadline is urgent (today or overdue)
+ */
+export function isDeadlineUrgent(deadlineDate: string | number | Date): boolean {
+	const daysUntil = getDaysUntilDeadline(deadlineDate);
+	return daysUntil <= 0;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

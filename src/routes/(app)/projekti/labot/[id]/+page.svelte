@@ -263,7 +263,7 @@
 					<Form.Field {form} name="preview">
 						<Form.Control>
 							{#snippet children({ props })}
-								<Form.Label>Cena</Form.Label>
+								<Form.Label>Priekšskats</Form.Label>
 								<Dropzone bind:value={$formData.preview as string} {...props} name="preview" />
 							{/snippet}
 						</Form.Control>

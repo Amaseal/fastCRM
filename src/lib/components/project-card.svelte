@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { formatDate, toCurrency, getDateDifference, isWorkFeasible } from '$lib/utils';
+	import {
+		formatDate,
+		toCurrency,
+		getDateDifference,
+		shouldShowDeadlineWarning,
+		isDeadlineUrgent
+	} from '$lib/utils';
 	import Printer from '@lucide/svelte/icons/printer';
 	import User from '@lucide/svelte/icons/user';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -224,9 +230,15 @@
 				: `/projekti/labot/${task.id}`}
 		>
 			<Card.Title class="flex items-center gap-2 text-base">
-				{#if task.endDate && task.count && isWorkFeasible(task.endDate, task.count)}
-					<TriangleAlert />
-				{/if}{task.title}
+				{#if task.endDate && shouldShowDeadlineWarning(task.endDate)}
+					<TriangleAlert
+						size={16}
+						class="flex-shrink-0 {isDeadlineUrgent(task.endDate)
+							? 'text-red-500'
+							: 'text-yellow-500'}"
+					/>
+				{/if}
+				<span class="truncate">{task.title}</span>
 			</Card.Title>
 			<Card.Description class="flex items-center justify-between">
 				<span>€{formatPrice(remainingPrice())}</span>
