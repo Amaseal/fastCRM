@@ -196,7 +196,7 @@
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2">
 							<Users class="h-5 w-5" />
-							Labākie vadītāji šajā mēnesī
+							Labākie vadītāji
 						</Card.Title>
 						<Card.Description>Vadītāji ar visvairāk uzdevumiem</Card.Description>
 					</Card.Header>

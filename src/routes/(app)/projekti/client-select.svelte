@@ -20,46 +20,57 @@
 	let { clients, form } = $props<{
 		clients?: Client[];
 		form?: SuperForm<z.infer<typeof taskSchema>>;
-	}>();
-
-	// State for dynamic client search
+	}>(); // State for dynamic client search
 	let searchedClients = $state<Client[]>([]);
+	let displayClients = $state<Client[]>([]);
 	let isSearching = $state(false);
 	let searchTerm = $state('');
 
-	// Initialize with empty array or provided clients
-	$effect(() => {
-		if (clients && clients.length > 0) {
-			searchedClients = clients;
-		}
-	});
+	// Initialize with provided clients
+	if (clients && clients.length > 0) {
+		searchedClients = clients;
+		displayClients = clients;
+	}
 
-	const clientOptions = $derived(
-		searchedClients.map(({ id, name }: Client) => ({
-			value: id,
-			label: name
-		}))
-	);
 	// Search function without debounce
 	async function performSearch(term: string) {
 		searchTerm = term;
 
 		if (term.length === 0) {
 			searchedClients = clients || [];
+			displayClients = clients || [];
+			isSearching = false;
 			return;
 		}
 
 		isSearching = true;
+
 		try {
 			const response = await fetch(`/api/clients/search?q=${encodeURIComponent(term)}`);
 			if (response.ok) {
 				const results = await response.json();
-				searchedClients = results;
+				// Only update if this is still the current search term
+				if (term === searchTerm) {
+					searchedClients = results;
+					displayClients = results; // Update display only when search completes
+					isSearching = false;
+				}
+			} else {
+				// Handle HTTP errors
+				if (term === searchTerm) {
+					searchedClients = [];
+					displayClients = [];
+					isSearching = false;
+				}
 			}
 		} catch (error) {
 			console.error('Error searching clients:', error);
-		} finally {
-			isSearching = false;
+			// Only update if this was the current search
+			if (term === searchTerm) {
+				searchedClients = [];
+				displayClients = [];
+				isSearching = false;
+			}
 		}
 	}
 
@@ -102,14 +113,14 @@
 							role="combobox"
 							{...props}
 						>
-							{clientOptions.find((f: { value: any }) => f.value === $formData.clientId)?.label ??
+							{searchedClients.find((f) => f.id === $formData.clientId)?.name ??
 								'Izvēlies klientu...'}
 							<ChevronsUpDownIcon class="opacity-50" />
 						</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
 					{/snippet}
 				</Form.Control>
 				<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
-					<Command.Root class="w-full max-w-full">
+					<Command.Root class="w-full max-w-full" shouldFilter={false}>
 						<Command.Input
 							autofocus
 							placeholder="Meklēt klientu..."
@@ -129,21 +140,22 @@
 						<Command.Group value="clients" class="custom-scroll max-h-64 overflow-y-auto">
 							{#if isSearching}
 								<Command.Item disabled>Meklē...</Command.Item>
+							{:else}
+								{#each displayClients as client (client.id)}
+									<Command.Item
+										value={client.name}
+										onSelect={() => {
+											$formData.clientId = client.id;
+											closeAndFocusTrigger(triggerId);
+										}}
+									>
+										{client.name}
+										<CheckIcon
+											class={cn('ml-auto', client.id !== $formData.clientId && 'text-transparent')}
+										/>
+									</Command.Item>
+								{/each}
 							{/if}
-							{#each clientOptions as client (client.value)}
-								<Command.Item
-									value={client.label}
-									onSelect={() => {
-										$formData.clientId = client.value;
-										closeAndFocusTrigger(triggerId);
-									}}
-								>
-									{client.label}
-									<CheckIcon
-										class={cn('ml-auto', client.value !== $formData.clientId && 'text-transparent')}
-									/>
-								</Command.Item>
-							{/each}
 						</Command.Group>
 					</Command.Root>
 				</Popover.Content>
