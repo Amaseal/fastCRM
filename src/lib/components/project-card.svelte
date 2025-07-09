@@ -224,7 +224,7 @@
 <Card.Root class="gap-0  p-1">
 	<Card.Header class="flex items-start justify-between p-2">
 		<a
-			class="flex w-full flex-col gap-0.5"
+			class="flex flex-col gap-0.5 text-wrap"
 			href={createUrlWithParams
 				? createUrlWithParams(`/projekti/labot/${task.id}`)
 				: `/projekti/labot/${task.id}`}
@@ -238,7 +238,7 @@
 							: 'text-yellow-500'}"
 					/>
 				{/if}
-				<span class="truncate">{task.title}</span>
+				<span class="">{task.title}</span>
 			</Card.Title>
 			<Card.Description class="flex items-center justify-between">
 				<span>€{formatPrice(remainingPrice())}</span>
