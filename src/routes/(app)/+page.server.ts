@@ -15,18 +15,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	tomorrow.setDate(tomorrow.getDate() + 1);
 
 	const todayStr = today.toISOString().split('T')[0];
-	const tomorrowStr = tomorrow.toISOString().split('T')[0];	// Get top managers (users with most managed tasks all time)
+	const tomorrowStr = tomorrow.toISOString().split('T')[0];	// Get top managers (users with highest total task prices all time)
 	const topManagers = await db
 		.select({
 			id: user.id,
 			name: user.name,
-			taskCount: count(task.id)
+			totalValue: sql<number>`COALESCE(SUM(${task.price}), 0)`
 		})
 		.from(user)
 		.leftJoin(task, eq(task.managerId, user.id))
 		.groupBy(user.id, user.name)
-		.orderBy(desc(count(task.id)))
-		.limit(5);	// Get top responsible persons (users with most responsible tasks all time)
+		.orderBy(desc(sql`COALESCE(SUM(${task.price}), 0)`))
+		.limit(5);// Get top responsible persons (users with most responsible tasks all time)
 	const topResponsiblePersons = await db
 		.select({
 			id: user.id,

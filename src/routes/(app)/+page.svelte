@@ -91,7 +91,7 @@
 </svelte:head>
 
 <header
-	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
+	class=" bg-background flex h-(--header-height) shrink-0 items-center gap-2 rounded-lg border-b p-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
 >
 	<div class="flex w-full items-center gap-1 lg:gap-2">
 		<Sidebar.Trigger class="-ml-1" />
@@ -198,7 +198,7 @@
 							<Users class="h-5 w-5" />
 							Labākie vadītāji
 						</Card.Title>
-						<Card.Description>Vadītāji ar visvairāk uzdevumiem</Card.Description>
+						<Card.Description>Vadītāji ar augstāko uzdevumu kopvērtību</Card.Description>
 					</Card.Header>
 					<Card.Content>
 						<div class="space-y-3">
@@ -213,7 +213,7 @@
 										</Badge>
 										<span class="font-medium">{manager.name || 'Nezināms'}</span>
 									</div>
-									<Badge variant="outline">{manager.taskCount} uzdevumi</Badge>
+									<Badge variant="outline">{formatCurrency(manager.totalValue || 0)}</Badge>
 								</div>
 							{:else}
 								<p class="text-sm text-muted-foreground">Nav datu šajā mēnesī</p>

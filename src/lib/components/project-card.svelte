@@ -224,7 +224,7 @@
 <Card.Root class="gap-0  p-1">
 	<Card.Header class="flex items-start justify-between p-2">
 		<a
-			class="flex flex-col gap-0.5 text-wrap"
+			class="flex w-full flex-col gap-0.5 text-wrap"
 			href={createUrlWithParams
 				? createUrlWithParams(`/projekti/labot/${task.id}`)
 				: `/projekti/labot/${task.id}`}
@@ -238,7 +238,7 @@
 							: 'text-yellow-500'}"
 					/>
 				{/if}
-				<span class="">{task.title}</span>
+				<span class="w-full">{task.title}</span>
 			</Card.Title>
 			<Card.Description class="flex items-center justify-between">
 				<span>€{formatPrice(remainingPrice())}</span>
@@ -317,9 +317,9 @@
 					printComponent();
 				}}
 				variant="ghost"
-				size="sm"
+				size="lg"
 			>
-				<Printer class="mr-2 h-4 w-4" />
+				<Printer class="h-4 w-4" />
 			</Button>
 
 			<Button
@@ -328,9 +328,9 @@
 					showNextcloudDialog = true;
 				}}
 				variant="ghost"
-				size="sm"
+				size="lg"
 			>
-				<MessageSquare class="mr-2 h-4 w-4" />
+				<MessageSquare class="h-4 w-4" />
 			</Button>
 
 			<Button
@@ -338,10 +338,10 @@
 					? createUrlWithParams(`/projekti/parvietot/${task.id}`)
 					: `/projekti/parvietot/${task.id}`}
 				variant="ghost"
-				size="sm"
+				size="lg"
 				onclick={(e) => e.stopPropagation()}
 			>
-				<Check class="mr-2 h-4 w-4" />
+				<Check class="h-4 w-4" />
 			</Button>
 
 			<Button
@@ -349,11 +349,11 @@
 					? createUrlWithParams(`/projekti/izdzest/${task.id}`)
 					: `/projekti/izdzest/${task.id}`}
 				variant="ghost"
-				size="sm"
-				class=" text-red-600 hover:bg-red-50 hover:text-red-700"
+				size="lg"
+				class="text-red-600 hover:bg-red-50 hover:text-red-700"
 				onclick={(e) => e.stopPropagation()}
 			>
-				<Trash2 class="mr-2 h-4 w-4" />
+				<Trash2 class="h-4 w-4" />
 			</Button>
 		</div>
 	</Card.Content>

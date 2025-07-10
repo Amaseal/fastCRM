@@ -73,7 +73,7 @@
 </script>
 
 <Card.Root
-	class=" bg-background/70 relative flex h-full w-[240px] flex-shrink-0 flex-col gap-0  p-1"
+	class=" bg-background/70 relative flex h-full w-[260px] flex-shrink-0 flex-col gap-0  p-1"
 >
 	<Card.Header class="justify-streatch flex flex-col gap-2 p-1">
 		<div class="flex w-full items-center gap-2">

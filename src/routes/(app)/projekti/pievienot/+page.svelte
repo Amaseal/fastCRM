@@ -119,159 +119,163 @@
 					<!-- Hidden field to submit tabId -->
 					<input type="hidden" name="tabId" bind:value={$formData.tabId} />
 
-					<div class="flex gap-2">
-						<div class="w-1/2">
-							<div class="flex gap-2">
-								<Form.Field {form} name="title" class="w-1/2">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>Nosaukums</Form.Label>
-											<Input
-												placeholder="Jānis, Made, utt..."
-												{...props}
-												bind:value={$formData.title}
-											/>
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-								<Form.Field {form} name="endDate" class="flex w-1/2 flex-col">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label class="mt-1 mb-1">Nodošanas datums</Form.Label>
-											<Popover.Root>
-												<Popover.Trigger
+					<div class="max-h-[70vh] overflow-y-auto">
+						<div class="flex gap-2">
+							<div class="w-1/2">
+								<div class="flex gap-2">
+									<Form.Field {form} name="title" class="w-1/2">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Nosaukums</Form.Label>
+												<Input
+													placeholder="Jānis, Made, utt..."
 													{...props}
-													class={cn(
-														buttonVariants({ variant: 'outline' }),
-														'bg-background w-full justify-start pl-4 text-left font-normal',
-														!value && 'text-muted-foreground'
-													)}
+													bind:value={$formData.title}
+												/>
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<Form.Field {form} name="endDate" class="flex w-1/2 flex-col">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label class="mt-1 mb-1">Nodošanas datums</Form.Label>
+												<Popover.Root>
+													<Popover.Trigger
+														{...props}
+														class={cn(
+															buttonVariants({ variant: 'outline' }),
+															'bg-background w-full justify-start pl-4 text-left font-normal',
+															!value && 'text-muted-foreground'
+														)}
+													>
+														{value
+															? df.format(value.toDate(getLocalTimeZone()))
+															: 'Izvēlies datumu'}
+														<CalendarIcon class="ml-auto size-4 opacity-50" />
+													</Popover.Trigger>
+													<Popover.Content class="w-auto p-0" side="top">
+														<Calendar
+															type="single"
+															value={value as DateValue}
+															bind:placeholder
+															minValue={new CalendarDate(1900, 1, 1)}
+															calendarLabel="Nodošanas datums"
+															onValueChange={(v) => {
+																if (v) {
+																	$formData.endDate = v.toString();
+																} else {
+																	$formData.endDate = '';
+																}
+															}}
+														/>
+													</Popover.Content>
+												</Popover.Root>
+												<Form.FieldErrors />
+												<input hidden value={$formData.endDate} name={props.name} />
+											{/snippet}
+										</Form.Control>
+									</Form.Field>
+									<Form.Field {form} name="count">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Skaits</Form.Label>
+												<NumberInput {...props} bind:value={$formData.count} />
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+								</div>
+								<div class="flex gap-2">
+									<Form.Field {form} name="responsiblePersonId" class="w-1/2">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Atbildīgā persona</Form.Label>
+												<Select.Root
+													type="single"
+													name={props.name}
+													bind:value={$formData.responsiblePersonId as string}
 												>
-													{value ? df.format(value.toDate(getLocalTimeZone())) : 'Izvēlies datumu'}
-													<CalendarIcon class="ml-auto size-4 opacity-50" />
-												</Popover.Trigger>
-												<Popover.Content class="w-auto p-0" side="top">
-													<Calendar
-														type="single"
-														value={value as DateValue}
-														bind:placeholder
-														minValue={new CalendarDate(1900, 1, 1)}
-														calendarLabel="Nodošanas datums"
-														onValueChange={(v) => {
-															if (v) {
-																$formData.endDate = v.toString();
-															} else {
-																$formData.endDate = '';
-															}
-														}}
-													/>
-												</Popover.Content>
-											</Popover.Root>
-											<Form.FieldErrors />
-											<input hidden value={$formData.endDate} name={props.name} />
-										{/snippet}
-									</Form.Control>
-								</Form.Field>
-								<Form.Field {form} name="count">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>Skaits</Form.Label>
-											<NumberInput {...props} bind:value={$formData.count} />
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-							</div>
-							<div class="flex gap-2">
-								<Form.Field {form} name="responsiblePersonId" class="w-1/2">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>Atbildīgā persona</Form.Label>
-											<Select.Root
-												type="single"
-												name={props.name}
-												bind:value={$formData.responsiblePersonId as string}
-											>
-												<Select.Trigger class="w-full">
-													{selectResponsible}
-												</Select.Trigger>
-												<Select.Content>
-													{#each data.users as user}
-														<Select.Item value={user.id}>{user.name}</Select.Item>
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-								<Form.Field {form} name="seamstress" class="w-1/2">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>Šujās</Form.Label>
-											<Select.Root
-												type="single"
-												name={props.name}
-												bind:value={$formData.seamstress as string}
-											>
-												<Select.Trigger class="w-full">
-													{$formData.seamstress ? $formData.seamstress : 'Izvēlies šuvēju'}
-												</Select.Trigger>
-												<Select.Content>
-													{#each seamstresses as seamstress}
-														<Select.Item value={seamstress.value}>{seamstress.label}</Select.Item>
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-								<Form.Field {form} name="price">
-									<Form.Control>
-										{#snippet children({ props })}
-											<Form.Label>Cena</Form.Label>
-											<MoneyInput {...props} bind:value={$formData.price} />
-										{/snippet}
-									</Form.Control>
-									<Form.FieldErrors />
-								</Form.Field>
-							</div>
-							<div class="w-full">
-								<MultiSelectCombobox materials={data.materials} {form} />
+													<Select.Trigger class="w-full">
+														{selectResponsible}
+													</Select.Trigger>
+													<Select.Content>
+														{#each data.users as user}
+															<Select.Item value={user.id}>{user.name}</Select.Item>
+														{/each}
+													</Select.Content>
+												</Select.Root>
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<Form.Field {form} name="seamstress" class="w-1/2">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Šujās</Form.Label>
+												<Select.Root
+													type="single"
+													name={props.name}
+													bind:value={$formData.seamstress as string}
+												>
+													<Select.Trigger class="w-full">
+														{$formData.seamstress ? $formData.seamstress : 'Izvēlies šuvēju'}
+													</Select.Trigger>
+													<Select.Content>
+														{#each seamstresses as seamstress}
+															<Select.Item value={seamstress.value}>{seamstress.label}</Select.Item>
+														{/each}
+													</Select.Content>
+												</Select.Root>
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+									<Form.Field {form} name="price">
+										<Form.Control>
+											{#snippet children({ props })}
+												<Form.Label>Cena</Form.Label>
+												<MoneyInput {...props} bind:value={$formData.price} />
+											{/snippet}
+										</Form.Control>
+										<Form.FieldErrors />
+									</Form.Field>
+								</div>
+								<div class="w-full">
+									<MultiSelectCombobox materials={data.materials} {form} />
+								</div>
+
+								<div class="w-full">
+									<ClientSelect clients={data.clients} {form} />
+								</div>
+
+								<div>
+									<label for="files">Faili:</label>
+									<TaskFiles {form} />
+								</div>
+								<div class="w-full">
+									<ProductSelect products={data.products} {form} />
+								</div>
 							</div>
 
-							<div class="w-full">
-								<ClientSelect clients={data.clients} {form} />
-							</div>
-
-							<div>
-								<label for="files">Faili:</label>
-								<TaskFiles {form} />
-							</div>
-							<div class="w-full">
-								<ProductSelect products={data.products} {form} />
+							<div class="w-1/2">
+								<label for="/">Apraksts</label>
+								<Edra bind:value={$formData.description as string} name="description" />
 							</div>
 						</div>
+						<Form.Field {form} name="preview">
+							<Form.Control>
+								{#snippet children({ props })}
+									<Form.Label>Priekšskats</Form.Label>
+									<Dropzone bind:value={$formData.preview} {...props} name="preview" />
+								{/snippet}
+							</Form.Control>
+							<Form.FieldErrors />
+						</Form.Field>
 
-						<div class="w-1/2">
-							<label for="/">Apraksts</label>
-							<Edra bind:value={$formData.description as string} name="description" />
-						</div>
+						<input type="hidden" name="tabId" bind:value={$formData.tabId} />
+						<input type="hidden" name="managerId" bind:value={$formData.managerId} />
 					</div>
-					<Form.Field {form} name="preview">
-						<Form.Control>
-							{#snippet children({ props })}
-								<Form.Label>Priekšskats</Form.Label>
-								<Dropzone bind:value={$formData.preview} {...props} name="preview" />
-							{/snippet}
-						</Form.Control>
-						<Form.FieldErrors />
-					</Form.Field>
-
-					<input type="hidden" name="tabId" bind:value={$formData.tabId} />
-					<input type="hidden" name="managerId" bind:value={$formData.managerId} />
 
 					<div class="mt-6 flex justify-end">
 						<Button type="submit">Saglabāt</Button>

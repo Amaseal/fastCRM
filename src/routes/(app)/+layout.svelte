@@ -4,6 +4,7 @@
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/state';
+	import background from '$lib/assets/vivid-blurred-colorful-background.jpg';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import CheckCircle2Icon from '@lucide/svelte/icons/check-circle-2';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
@@ -40,10 +41,12 @@
 				{@render children()}
 			</div>
 			<div class="dark:bg-background/90 bg-background/60 absolute inset-0 z-2"></div>
-			<div
-				class="absolute inset-0 bg-[url(https://picsum.photos/seed/picsum/1080/1920?blur)] bg-cover"
-			></div>
-		</div>
-	</Sidebar.Inset>
+			<img
+				src={background}
+				alt="decorative"
+				class="absolute inset-0 h-full w-full rotate-180 bg-cover"
+			/>
+		</div></Sidebar.Inset
+	>
 </Sidebar.Provider>
 <ModeWatcher />

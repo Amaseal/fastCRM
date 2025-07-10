@@ -83,7 +83,7 @@
 						{#snippet child({ props })}
 							<a href="/settings" {...props} class="flex items-end gap-2">
 								<SettingsIcon></SettingsIcon>
-								<span class="text-base font-semibold">Iestatijumi</span>
+								<span class="mr-3 text-base font-semibold">Iestatijumi</span>
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>
