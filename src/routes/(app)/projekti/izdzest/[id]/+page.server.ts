@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { task, taskMaterial, taskProduct, file } from '$lib/server/db/schema';
+import { task, taskMaterial, taskProduct, file, notification } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { redirect } from '@sveltejs/kit';
 import { setFlash } from 'sveltekit-flash-message/server';
@@ -50,9 +50,7 @@ export const actions = {
                         // Ignore error, API handles file not found gracefully
                     }
                 }
-            }
-
-            // Delete related records first (due to foreign key constraints)
+            }            // Delete related records first (due to foreign key constraints)
             
             // 1. Delete task materials (junction table)
             await db.delete(taskMaterial).where(eq(taskMaterial.taskId, taskId));
@@ -60,10 +58,13 @@ export const actions = {
             // 2. Delete task products (junction table)
             await db.delete(taskProduct).where(eq(taskProduct.taskId, taskId));
             
-            // 3. Delete or update files (set taskId to null to keep files but unlink them)
+            // 3. Delete notifications related to this task
+            await db.delete(notification).where(eq(notification.taskId, taskId));
+            
+            // 4. Delete or update files (set taskId to null to keep files but unlink them)
             // Option A: Delete files completely
             // await db.delete(file).where(eq(file.taskId, taskId));
-              // Option B: Keep files but unlink them from the task (recommended)
+            // Option B: Keep files but unlink them from the task (recommended)
             await db.update(file).set({ taskId: null }).where(eq(file.taskId, taskId));
             
             // Create notifications for task deletion before deleting the task
@@ -78,7 +79,7 @@ export const actions = {
                 });
             }
             
-            // 4. Finally delete the main task
+            // 5. Finally delete the main task
             await db.delete(task).where(eq(task.id, taskId));
               } catch (error) {
             console.error('Error deleting task:', error);
