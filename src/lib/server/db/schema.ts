@@ -95,10 +95,10 @@ export const notification = table('notification', {
 	userId: t
 		.text('user_id')
 		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
+		.references(() => user.id),
 	taskId: t
 		.int('task_id')
-		.references(() => task.id, { onDelete: 'cascade' }),
+		.references(() => task.id),
 	isRead: t.integer('is_read', { mode: 'boolean' }).default(false).notNull(),
 	...timestamps
 });
