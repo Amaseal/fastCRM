@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/state';
+	import { isEditorFocused } from '$lib/stores.js';
 	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
@@ -69,9 +70,11 @@
 			processFile(selectedFiles[0]);
 		}
 	}
-
 	function handlePaste(e: ClipboardEvent): void {
 		if (disabled) return;
+
+		// Don't handle paste events if the editor is focused
+		if ($isEditorFocused) return;
 
 		const clipboardItems = e.clipboardData?.items;
 		if (!clipboardItems) return;

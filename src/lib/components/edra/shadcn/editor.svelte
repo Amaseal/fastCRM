@@ -4,6 +4,7 @@
 	import initEditor from '../editor.js';
 	import { focusEditor } from '../utils.js';
 	import { cn } from '$lib/utils.js';
+	import { isEditorFocused } from '$lib/stores.js';
 	import '../editor.css';
 	import './style.css';
 	import '../onedark.css';
@@ -34,7 +35,6 @@
 	import SlashCommandList from './components/SlashCommandList.svelte';
 
 	const lowlight = createLowlight(all);
-
 	/**
 	 * Bind the element to the editor
 	 */
@@ -48,6 +48,8 @@
 		class: className
 	}: EdraEditorProps = $props();
 
+	// Handle delayed blur to prevent momentary focus loss during paste operations
+	let blurTimeout: ReturnType<typeof setTimeout> | null = null;
 	onMount(() => {
 		editor = initEditor(
 			element,
@@ -77,13 +79,33 @@
 					editor = props.editor;
 				},
 				editable,
-				autofocus
+				autofocus,
+				onFocus() {
+					// Clear any pending blur timeout when focusing
+					if (blurTimeout) {
+						clearTimeout(blurTimeout);
+						blurTimeout = null;
+					}
+					isEditorFocused.set(true);
+				},
+				onBlur() {
+					// Delay setting focus to false to prevent momentary focus loss during paste operations
+					blurTimeout = setTimeout(() => {
+						isEditorFocused.set(false);
+						blurTimeout = null;
+					}, 100); // 100ms delay should be enough to handle paste operations
+				}
 			}
 		);
 	});
-
 	onDestroy(() => {
+		// Clear any pending blur timeout
+		if (blurTimeout) {
+			clearTimeout(blurTimeout);
+			blurTimeout = null;
+		}
 		if (editor) editor.destroy();
+		isEditorFocused.set(false);
 	});
 </script>
 
