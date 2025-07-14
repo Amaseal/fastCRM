@@ -58,7 +58,7 @@ export const actions = {
             // 2. Delete task products (junction table)
             await db.delete(taskProduct).where(eq(taskProduct.taskId, taskId));
             
-            // 3. Delete notifications related to this task
+            // 3. Delete notifications related to this task (both read and unread)
             await db.delete(notification).where(eq(notification.taskId, taskId));
             
             // 4. Delete or update files (set taskId to null to keep files but unlink them)
