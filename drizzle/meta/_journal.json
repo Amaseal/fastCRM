@@ -15,6 +15,13 @@
       "when": 1752484809444,
       "tag": "0001_spotty_loners",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1752491084770,
+      "tag": "0002_windy_iron_monger",
+      "breakpoints": true
     }
   ]
 }

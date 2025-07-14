@@ -7,7 +7,4 @@ if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
 const client = new Database(env.DATABASE_URL);
 
-// Disable foreign key constraints since we handle deletions manually
-client.pragma('foreign_keys = OFF');
-
 export const db = drizzle(client, { schema });
