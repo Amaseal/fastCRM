@@ -56,6 +56,7 @@ export const actions = {
             await db.delete(taskMaterial).where(eq(taskMaterial.taskId, taskId));
             
             // 2. Delete task products (junction table)
+           
             await db.delete(taskProduct).where(eq(taskProduct.taskId, taskId));
             
             // 3. Delete notifications related to this task (both read and unread)
@@ -63,24 +64,22 @@ export const actions = {
             
             // 4. Delete or update files (set taskId to null to keep files but unlink them)
             // Option A: Delete files completely
-            // await db.delete(file).where(eq(file.taskId, taskId));
-            // Option B: Keep files but unlink them from the task (recommended)
-            await db.update(file).set({ taskId: null }).where(eq(file.taskId, taskId));
+            await db.delete(file).where(eq(file.taskId, taskId));
             
-            // Create notifications for task deletion before deleting the task
+            // 5. Delete the main task
+            await db.delete(task).where(eq(task.id, taskId));
+
+            // 6. Create notifications for task deletion AFTER deleting the task
             if (locals.user && item) {
                 await createTaskNotifications({
                     currentUserId: locals.user.id,
-                    taskId: taskId,
+                    taskId: null, // No task ID since task is deleted
                     managerId: item.managerId,
                     responsiblePersonId: item.responsiblePersonId,
                     actionType: 'deleted',
                     taskTitle: item.title
                 });
             }
-            
-            // 5. Finally delete the main task
-            await db.delete(task).where(eq(task.id, taskId));
               } catch (error) {
             console.error('Error deleting task:', error);
             setFlash({ type: 'error', message: "Kļūda dzēšot projektu!" }, cookies);
