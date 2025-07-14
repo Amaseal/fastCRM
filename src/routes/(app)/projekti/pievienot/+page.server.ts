@@ -14,6 +14,7 @@ import {
 import { setFlash } from 'sveltekit-flash-message/server';
 import { redirect } from '@sveltejs/kit';
 import { asc, inArray, eq } from 'drizzle-orm';
+import { createTaskNotifications } from '$lib/server/notifications';
 
 export const load = async ({ url }) => {
 	const tabId = url.searchParams.get('tabId');
@@ -51,7 +52,6 @@ export const actions = {
 	default: async ({ request, cookies, locals, url }) => {
 		// Validate the form data with superforms
 		const form = await superValidate(request, zod(taskSchema));
-console.log(form.valid)
 		// If form validation fails, return the form with errors
 		if (!form.valid) {
 			return fail(400, { form });
@@ -174,9 +174,20 @@ console.log(form.valid)
 					await db
 						.update(client)
 						.set({ totalOrdered: newTotal })
-						.where(eq(client.id, actualClientId));
-				}
-			}		// Return success message
+						.where(eq(client.id, actualClientId));				}
+			}
+
+			// Create notifications for task creation
+			await createTaskNotifications({
+				currentUserId: currentUser.id,
+				taskId: newTask.id,
+				managerId: currentUser.id,
+				responsiblePersonId: responsiblePersonId || null,
+				actionType: 'created',
+				taskTitle: title
+			});
+
+			// Return success message
 		setFlash({ type: 'success', message: 'Projekts veiksmīgi izveidots!' }, cookies);
 	} catch (error) {
 		console.error('Error saving task:', error);

@@ -13,6 +13,7 @@
 	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import { AreaChart, BarChart } from 'layerchart';
 	import { scaleLinear, scalePoint, scaleBand } from 'd3-scale';
+	import Notifications from '$lib/components/notifications.svelte';
 
 	let { data } = $props();
 
@@ -165,29 +166,7 @@
 					</Card.Content>
 				</Card.Root>
 			</div>
-			<Card.Root>
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2">
-						<Bell class="h-5 w-5" />
-						Paziņojumi
-					</Card.Title>
-					<Card.Description>Jūsu aktīvie paziņojumi</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<div class="space-y-3">
-						{#each data.userNotifications as notification}
-							<div class="flex items-start gap-2">
-								<div class="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
-								<div class="flex-1">
-									<p class="text-sm">{notification.text}</p>
-								</div>
-							</div>
-						{:else}
-							<p class="text-sm text-muted-foreground">Nav aktīvu paziņojumu</p>
-						{/each}
-					</div>
-				</Card.Content>
-			</Card.Root>
+			<Notifications notifications={data.userNotifications} />
 		</div>
 
 		<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">

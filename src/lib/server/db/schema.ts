@@ -13,6 +13,7 @@ export type Tab = InferSelectModel<typeof tab>;
 export type TaskMaterial = InferSelectModel<typeof taskMaterial>;
 export type TaskProduct = InferSelectModel<typeof taskProduct>;
 export type File = InferSelectModel<typeof file>;
+export type Notification = InferSelectModel<typeof notification>;
 export type DailyWord = InferSelectModel<typeof dailyWord>;
 export type GameStats = InferSelectModel<typeof gameStats>;
 export type GameAttempt = InferSelectModel<typeof gameAttempts>;
@@ -94,7 +95,12 @@ export const notification = table('notification', {
 	userId: t
 		.text('user_id')
 		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' })
+		.references(() => user.id, { onDelete: 'cascade' }),
+	taskId: t
+		.int('task_id')
+		.references(() => task.id, { onDelete: 'cascade' }),
+	isRead: t.integer('is_read', { mode: 'boolean' }).default(false).notNull(),
+	...timestamps
 });
 
 export const inviteCodes = table('invite_codes', {
@@ -217,10 +223,10 @@ export const taskRelations = relations(task, ({ one, many }) => ({
 		fields: [task.responsiblePersonId],
 		references: [user.id],
 		relationName: 'responsibleTasks'
-	}),
-	materials: many(taskMaterial),
+	}),	materials: many(taskMaterial),
 	taskProducts: many(taskProduct),
 	files: many(file, { relationName: 'taskFiles' }), // Add files relation
+	notifications: many(notification),
 	tab: one(tab, {
 		fields: [task.tabId],
 		references: [tab.id]
@@ -254,6 +260,7 @@ export const taskProductRelations = relations(taskProduct, ({ one }) => ({
 export const userRelations = relations(user, ({ many, one }) => ({
 	managedTasks: many(task, { relationName: 'managedTasks' }),
 	responsibleTasks: many(task, { relationName: 'responsibleTasks' }),
+	notifications: many(notification),
 	gameStats: one(gameStats),
 	gameAttempts: many(gameAttempts)
 }));
@@ -273,6 +280,18 @@ export const productRelations = relations(product, ({ many }) => ({
 
 export const clientRelations = relations(client, ({ many }) => ({
 	tasks: many(task)
+}));
+
+// Notification relations
+export const notificationRelations = relations(notification, ({ one }) => ({
+	user: one(user, {
+		fields: [notification.userId],
+		references: [user.id]
+	}),
+	task: one(task, {
+		fields: [notification.taskId],
+		references: [task.id]
+	})
 }));
 
 // File relations

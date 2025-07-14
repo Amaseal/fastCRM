@@ -3,6 +3,7 @@ import { task, taskMaterial, taskProduct, file } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { redirect } from '@sveltejs/kit';
 import { setFlash } from 'sveltekit-flash-message/server';
+import { createTaskNotifications } from '$lib/server/notifications';
 
 export const load = async ({ params }) => {
     const item = await db.query.task.findFirst({
@@ -13,13 +14,18 @@ export const load = async ({ params }) => {
 }
 
 export const actions = {
-    default: async ({ params, fetch, cookies, url }) => {
-        try {
+    default: async ({ params, fetch, cookies, url, locals }) => {        try {
             const taskId = Number(params.id);
             
-            // Get the task to find the image path
+            // Get the task details for notifications before deletion
             const item = await db.query.task.findFirst({
-                where: eq(task.id, taskId)
+                where: eq(task.id, taskId),
+                columns: {
+                    title: true,
+                    managerId: true,
+                    responsiblePersonId: true,
+                    preview: true
+                }
             });            if (!item) {
                 setFlash({ type: 'error', message: "Projekts netika atrasts!" }, cookies);
                 const searchParams = url.searchParams.toString();
@@ -57,9 +63,20 @@ export const actions = {
             // 3. Delete or update files (set taskId to null to keep files but unlink them)
             // Option A: Delete files completely
             // await db.delete(file).where(eq(file.taskId, taskId));
-            
-            // Option B: Keep files but unlink them from the task (recommended)
+              // Option B: Keep files but unlink them from the task (recommended)
             await db.update(file).set({ taskId: null }).where(eq(file.taskId, taskId));
+            
+            // Create notifications for task deletion before deleting the task
+            if (locals.user && item) {
+                await createTaskNotifications({
+                    currentUserId: locals.user.id,
+                    taskId: taskId,
+                    managerId: item.managerId,
+                    responsiblePersonId: item.responsiblePersonId,
+                    actionType: 'deleted',
+                    taskTitle: item.title
+                });
+            }
             
             // 4. Finally delete the main task
             await db.delete(task).where(eq(task.id, taskId));

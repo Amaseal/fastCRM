@@ -16,9 +16,10 @@ import { superValidate, fail, message, type SuperValidated } from 'sveltekit-sup
 import { taskSchema } from './schema';
 import { z } from 'zod';
 import { redirect, setFlash } from 'sveltekit-flash-message/server';
+import { createTaskNotifications, getTabTitle } from '$lib/server/notifications';
 
 export const actions = {
-	editCategory: async ({ request, cookies }) => {
+	editCategory: async ({ request, cookies, locals }) => {
 		try {
 			// Parse form data
 			const formData = await request.formData();
@@ -58,13 +59,41 @@ export const actions = {
 			if (sourceTabId === targetTabId) {
 				console.log('[editCategory] Source and target tabs are the same, no action needed');
 				return { success: true, message: 'No changes needed' };
-			}
+			}			// Get task details for notifications
+			const taskDetails = await db.query.task.findFirst({
+				where: eq(task.id, Number(taskId)),
+				columns: {
+					title: true,
+					managerId: true,
+					responsiblePersonId: true
+				}
+			});
 
 			// Update task's tab field to the new tab
 			const updateResult = await db
 				.update(task)
 				.set({ tabId: parseInt(targetTabId, 10) })
 				.where(eq(task.id, Number(taskId)));
+
+			// Get tab titles for notification message
+			const [fromTabTitle, toTabTitle] = await Promise.all([
+				getTabTitle(parseInt(sourceTabId, 10)),
+				getTabTitle(parseInt(targetTabId, 10))
+			]);
+
+			// Create notifications for task movement
+			if (taskDetails && locals.user) {
+				await createTaskNotifications({
+					currentUserId: locals.user.id,
+					taskId: Number(taskId),
+					managerId: taskDetails.managerId,
+					responsiblePersonId: taskDetails.responsiblePersonId,
+					actionType: 'moved',
+					fromTabTitle: fromTabTitle || 'Nezināms',
+					toTabTitle: toTabTitle || 'Nezināms',
+					taskTitle: taskDetails.title
+				});
+			}
 
 			setFlash({ type: 'success', message: 'Uzdevums veiksmīgi pārvietots' }, cookies);
 			return { success: true, message: 'Task moved successfully' };

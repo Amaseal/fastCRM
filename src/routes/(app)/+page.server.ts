@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { task, user, client, notification, taskProduct, product, tab } from '$lib/server/db/schema';
 import { sql, count, sum, desc, eq, and, or, lte, gte, ne } from 'drizzle-orm';
+import { getUserNotifications } from '$lib/server/notifications';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -61,17 +62,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 				ne(tab.title, 'done')
 			)
 		)
-		.orderBy(task.endDate)
-		.limit(10);
+		.orderBy(task.endDate)		.limit(10);
 
-	const userNotifications = await db
-		.select({
-			id: notification.id,
-			text: notification.message,
-			userId: notification.userId
-		})
-		.from(notification)
-		.limit(5);
+	// Get user notifications
+	const userNotifications = locals.user ? await getUserNotifications(locals.user.id) : [];
 
 	// Get best clients by total ordered
 	const bestClients = await db

@@ -15,6 +15,7 @@ import {
 import { setFlash } from 'sveltekit-flash-message/server';
 import { redirect } from '@sveltejs/kit';
 import { asc, eq, inArray } from 'drizzle-orm';
+import { createTaskNotifications } from '$lib/server/notifications';
 
 export const load = async ({ params }) => {
 	let item = await db.query.task.findFirst({
@@ -108,13 +109,15 @@ export const actions = {
 			if (!currentUser) {
 				return fail(401, { form, message: 'User not authorized' });
 			}			const taskId = Number(params.id);
-			
-			// Get the current task data to compare price changes
+					// Get the current task data to compare price changes
 			const currentTask = await db.query.task.findFirst({
 				where: eq(task.id, taskId),
 				columns: {
 					price: true,
-					clientId: true
+					clientId: true,
+					managerId: true,
+					responsiblePersonId: true,
+					title: true
 				}
 			});
 
@@ -290,9 +293,18 @@ export const actions = {
 							.update(client)
 							.set({ totalOrdered: newFinalTotal })
 							.where(eq(client.id, newClientId));
-					}
-				}
+					}				}
 			}
+
+			// Create notifications for task update
+			await createTaskNotifications({
+				currentUserId: currentUser.id,
+				taskId: taskId,
+				managerId: currentTask.managerId || null,
+				responsiblePersonId: responsiblePersonId || null,
+				actionType: 'updated',
+				taskTitle: title
+			});
 
 			// Return success message
 			setFlash({ type: 'success', message: 'Projekts veiksmīgi atjaunināts!' }, cookies);
