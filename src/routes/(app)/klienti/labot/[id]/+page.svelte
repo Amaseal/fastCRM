@@ -11,10 +11,9 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import X from '@lucide/svelte/icons/x';
 	import type { Client } from '$lib/server/db/schema';
-
 	let { data }: { data: { form: SuperValidated<Infer<ClientSchema>>; item: Client } } = $props();
 
-	const form = superForm(data.item, {
+	const form = superForm(data.form, {
 		validators: zodClient(clientSchema)
 	});
 

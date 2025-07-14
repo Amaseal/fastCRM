@@ -80,8 +80,20 @@
 	let showAddForm = $state(false);
 
 	let open = $state(false);
-
 	let formData = form.form;
+
+	// Helper function to get client contact info (phone preferred, fallback to email)
+	function getClientContact(client: Client): string {
+		if (client.phone) return client.phone;
+		if (client.email) return client.email;
+		return '';
+	}
+
+	// Helper function to format client display text
+	function formatClientDisplay(client: Client): string {
+		const contact = getClientContact(client);
+		return contact ? `${client.name} (${contact})` : client.name;
+	}
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -113,10 +125,12 @@
 							role="combobox"
 							{...props}
 						>
-							{searchedClients.find((f) => f.id === $formData.clientId)?.name ??
-								'Izvēlies klientu...'}
+							{(() => {
+								const selectedClient = searchedClients.find((f) => f.id === $formData.clientId);
+								return selectedClient ? formatClientDisplay(selectedClient) : 'Izvēlies klientu...';
+							})()}
 							<ChevronsUpDownIcon class="opacity-50" />
-						</Popover.Trigger> <input hidden value={$formData.clientId} name={props.name} />
+						</Popover.Trigger><input hidden value={$formData.clientId} name={props.name} />
 					{/snippet}
 				</Form.Control>
 				<Popover.Content class="w-[var(--bits-popover-anchor-width)] p-0">
@@ -149,9 +163,18 @@
 											closeAndFocusTrigger(triggerId);
 										}}
 									>
-										{client.name}
+										<div class="flex w-full gap-2">
+											<span class="font-medium">{client.name}</span>
+											{#if getClientContact(client)}
+												<span class="text-muted-foreground text-sm">{getClientContact(client)}</span
+												>
+											{/if}
+										</div>
 										<CheckIcon
-											class={cn('ml-auto', client.id !== $formData.clientId && 'text-transparent')}
+											class={cn(
+												'ml-auto flex-shrink-0',
+												client.id !== $formData.clientId && 'text-transparent'
+											)}
 										/>
 									</Command.Item>
 								{/each}

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { task, user, client, notification, taskProduct, product } from '$lib/server/db/schema';
-import { sql, count, sum, desc, eq, and, or, lte, gte } from 'drizzle-orm';
+import { task, user, client, notification, taskProduct, product, tab } from '$lib/server/db/schema';
+import { sql, count, sum, desc, eq, and, or, lte, gte, ne } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -37,9 +37,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin(task, eq(task.responsiblePersonId, user.id))
 		.groupBy(user.id, user.name)
 		.orderBy(desc(count(task.id)))
-		.limit(5);
-
-	// Get urgent tasks for current user (due today, tomorrow, or overdue)
+		.limit(5);	// Get urgent tasks for current user (due today, tomorrow, or overdue)
+	// Exclude completed tasks by filtering out the "done" tab
 	const urgentTasks = await db
 		.select({
 			id: task.id,
@@ -49,6 +48,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 		.from(task)
 		.leftJoin(client, eq(task.clientId, client.id))
+		.leftJoin(tab, eq(task.tabId, tab.id))
 		.where(
 			and(
 				eq(task.responsiblePersonId, locals.user!.id),
@@ -56,7 +56,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 					eq(task.endDate, todayStr),
 					eq(task.endDate, tomorrowStr),
 					sql`${task.endDate} < ${todayStr}`
-				)
+				),
+				// Exclude tasks that are in the "done" tab
+				ne(tab.title, 'done')
 			)
 		)
 		.orderBy(task.endDate)

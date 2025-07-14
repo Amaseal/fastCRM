@@ -17,14 +17,13 @@ export const actions = {
         const form = await superValidate(request, zod(clientSchema));
         if (!form.valid) {
             return fail(400, { form });
-        }
-
-        try {
+        }        try {
+            // Convert empty strings to null for database storage
             await db.insert(client).values({
                 name: form.data.name,
-                email: form.data.email,
-                phone: form.data.phone,
-                description: form.data.description,
+                email: form.data.email?.trim() || null,
+                phone: form.data.phone?.trim() || null,
+                description: form.data.description?.trim() || null,
                 type: form.data.type
             });
         } catch (err) {
